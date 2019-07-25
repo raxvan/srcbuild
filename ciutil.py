@@ -23,7 +23,7 @@ def files_equal(file_path_a,file_path_b):
 
 
 def rmdir(dir_path):
-	if not os.path.exists(file_path_a):
+	if not os.path.exists(dir_path):
 		print("No folder to remove at:" + dir_path)
 		return
 	import shutil
