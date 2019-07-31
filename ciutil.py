@@ -23,8 +23,23 @@ def files_equal(file_path_a,file_path_b):
 
 
 def rmdir(dir_path):
-	if not os.path.exists(dir_path):
-		print("No folder to remove at:" + dir_path)
+	abs_dir = os.path.abspath(dir_path)
+	message = "Removing [" + abs_dir + "]"
+
+	if not os.path.exists(abs_dir):
+		print(message + " ... not found ...")
 		return
-	import shutil
-	shutil.rmtree(dir_path,ignore_errors=True)
+
+	print(message)
+
+	for path in os.listdir(abs_dir):
+		dpath = os.path.join(abs_dir,os.fsdecode(path))
+		#print(dpath)
+		if os.path.isfile(dpath):
+			os.remove(dpath)
+			continue
+		if os.path.isdir(dpath):
+			rmdir(dpath)
+			continue
+
+	os.rmdir(abs_dir)

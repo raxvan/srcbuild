@@ -21,21 +21,21 @@ env_paths = {
 #################################################################################################
 #################################################################################################
 
-def get_builders_list():
-	return [
-		"vs2019",
-		"vs2017",
-		"vs2015",
-		"make"
-	]
+def get_builder_map():
+	return {
+		"vs2019" : "PRJ_BUILDER_IS_VS2019" ,
+		"vs2017" : "PRJ_BUILDER_IS_VS2017" ,
+		"vs2015" : "PRJ_BUILDER_IS_VS2015" ,
+		"make" : "PRJ_BUILDER_IS_MAKE" ,
+	}
 
 def get_platform_map():
 	return {
-		"win32" : "BUILD_PLATFORM_WIN32",
-		"linux" : "BUILD_PLATFORM_LINUX",
-		"android" : "BUILD_PLATFORM_ANDROID",
-		"ios" : "BUILD_PLATFORM_IOS",
-		"osx" : "BUILD_PLATFORM_OSX",
+		"win32" : "PRJ_PLATFORM_IS_WIN32",
+		"linux" : "PRJ_PLATFORM_IS_LINUX",
+		"android" : "PRJ_PLATFORM_IS_ANDROID",
+		"ios" : "PRJ_PLATFORM_IS_IOS",
+		"osx" : "PRJ_PLATFORM_IS_OSX",
 	}
 
 def _decode_project_name(abs_file_path):
@@ -46,7 +46,7 @@ def _decode_project_name(abs_file_path):
 class Generator():
 	def __init__(self, default_extensions = None):
 		parser = argparse.ArgumentParser()
-		parser.add_argument('builder', choices=get_builders_list(), help='tool used to build stuff, like your ide')
+		parser.add_argument('builder', choices=get_builder_map().keys(), help='tool used to build stuff, like your ide')
 		parser.add_argument('platform', choices=get_platform_map().keys(), help='target platform')
 		parser.add_argument('-o', '--out', dest="out", help='output folder path', nargs=1)
 		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths')
@@ -191,6 +191,7 @@ class Generator():
 
 		#add builtin defines
 		defines.append(get_platform_map()[self.platform])
+		defines.append(get_builder_map()[self.builder])
 		
 
 		#calculate build output
