@@ -23,9 +23,19 @@ env_paths = {
 
 def get_builder_map():
 	return {
+		"msvc" : "PRJ_BUILDER_IS_VS2019" , #latest
 		"vs2019" : "PRJ_BUILDER_IS_VS2019" ,
 		"vs2017" : "PRJ_BUILDER_IS_VS2017" ,
 		"vs2015" : "PRJ_BUILDER_IS_VS2015" ,
+		"make" : "PRJ_BUILDER_IS_MAKE" ,
+	}
+
+def get_builder_family():
+	return {
+		"msvc" : "PRJ_BUILDER_FAMILY_MSVC" , #latest
+		"vs2019" : "PRJ_BUILDER_FAMILY_MSVC" ,
+		"vs2017" : "PRJ_BUILDER_FAMILY_MSVC" ,
+		"vs2015" : "PRJ_BUILDER_FAMILY_MSVC" ,
 		"make" : "PRJ_BUILDER_IS_MAKE" ,
 	}
 
@@ -46,10 +56,15 @@ def _decode_project_name(abs_file_path):
 class Generator():
 	def __init__(self, default_extensions = None):
 		parser = argparse.ArgumentParser()
-		parser.add_argument('builder', choices=get_builder_map().keys(), help='tool used to build stuff, like your ide')
-		parser.add_argument('platform', choices=get_platform_map().keys(), help='target platform')
+
 		parser.add_argument('-o', '--out', dest="out", help='output folder path', nargs=1)
 		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths')
+
+		#TODO
+		parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
+
+		parser.add_argument('builder', nargs='?', choices=get_builder_map().keys(), help='tool used to build stuff, like your ide')
+		parser.add_argument('platform', nargs='?', choices=get_platform_map().keys(), help='target platform')
 
 		args = parser.parse_args()
 
@@ -57,6 +72,9 @@ class Generator():
 			print(json.dumps(env_paths, indent=4, sort_keys=True))
 			exit()
 
+		if args.builder == None or args.platform == None:
+			print("Builder and platform is missing")
+			exit()
 
 		#p#rint(args)
 
@@ -75,7 +93,7 @@ class Generator():
 
 		self.name = _decode_project_name(sys.argv[0])
 
-		print("\n--------------------------------------------:: " + self.name + " >>>")	
+		print("\n--------------------------------------------:: " + self.name + " >>>")
 		#print("	>defines:" + str(self.global_defines))
 		if self.output != None:
 			print("	>output:" + self.output)
@@ -129,7 +147,7 @@ class Generator():
 				return [s for s in all_sources if not s in sources_to_filter]
 
 		raise Exception("Unknown filter:" + target_platforms)
-	
+
 
 	#if platform does notmatch then we remove those files from all sources
 	def globfilter(self, all_sources, target_platforms, rel_dir_path, extensions = None):
@@ -192,7 +210,7 @@ class Generator():
 		#add builtin defines
 		defines.append(get_platform_map()[self.platform])
 		defines.append(get_builder_map()[self.builder])
-		
+		defines.append(get_builder_family()[self.builder])
 
 		#calculate build output
 		builder_solution_folder = os.path.join(self.abs_project_path,"build",self.name + "_" + self.platform + "_" + self.builder )

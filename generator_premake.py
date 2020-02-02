@@ -21,10 +21,10 @@ workspace "_this_"
 	location(".")
 	configurations { "Debug", "Release" }
 	platforms { "x32", "x64", "ARM" }
+
 	filter "platforms:x32"
 		kind "StaticLib"
 		architecture "x32"
-
 	filter "platforms:x64"
 		kind "StaticLib"
 		architecture "x64"
@@ -43,6 +43,7 @@ premake_platform_map = {
 	"linux" : "linux",
 }
 premake_builder_map = {
+	"msvc" : "vs2019", #latest
 	"vs2019" : "vs2019",
 	"vs2017" : "vs2017",
 	"vs2015" : "vs2015",
@@ -66,7 +67,7 @@ project "__NAME__"
 	links { __LINKS__ }
 
 	flags {
-		cppdialect "C++14"
+		cppdialect "C++17"
 	}
 
 	configuration "Debug"
