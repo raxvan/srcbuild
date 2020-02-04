@@ -105,6 +105,9 @@ class Generator():
 			if not p in known_list:
 				raise Exception("Unknown platform filter `" + p + "` accepted platforms:\n" + "\n".join(known_list.keys()))
 
+	def get_platform_define(self):
+		return get_platform_map()[self.platform]
+
 	def envget(self,*args):
 		itr = env_paths
 		for a in args:
