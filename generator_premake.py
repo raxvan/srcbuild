@@ -19,7 +19,7 @@ local _global_optimize_flags = "Speed"
 
 workspace "_this_"
 	location(".")
-	configurations { "Debug", "Release" }
+	configurations { "Debug", "Release", "Development", "DevRelease" }
 	platforms { "x32", "x64", "ARM" }
 
 	filter "platforms:x32"
@@ -50,6 +50,12 @@ premake_builder_map = {
 	"make" : "gmake",
 }
 
+cpp_standards_map = {
+	"11" : "C++11",
+	"14" : "C++14",
+	"17" : "C++17"
+}
+
 premake_project_template = """
 project "__NAME__"
 	kind("__KIND__")
@@ -67,7 +73,7 @@ project "__NAME__"
 	links { __LINKS__ }
 
 	flags {
-		cppdialect "C++17"
+		cppdialect "__STANDARD__"
 	}
 
 	configuration "Debug"
@@ -77,9 +83,24 @@ project "__NAME__"
 	configuration "Release"
 		optimize (_global_optimize_flags)
 
+	configuration "Development"
+		optimize "Off"
+		symbols "On"
+		staticruntime "On"
+		runtime "Debug"
+
+	configuration "DevRelease"
+		optimize (_global_optimize_flags)
+		symbols "On"
+		staticruntime "Off"
+		runtime "Debug"
+
+
 	configmap {
 		["Debug"] = "Debug",
 		["Release"] = "Release",
+		["Development"] = "Development",
+		["DevRelease"] = "DevRelease",
 	}
 """
 
@@ -106,6 +127,7 @@ def append_project_to_file(file_handle, ctx, target_build_folder, project_stack,
 		"__KIND__" : premake_project_kind[item["kind"]],
 		"__PLATFORM__" : item["platform"],
 		"__BUILDER__" : item["builder"],
+		"__STANDARD__" : cpp_standards_map[item["cpp-standard"]]
 	}
 
 	#generator.premake.lua

@@ -48,6 +48,13 @@ def get_platform_map():
 		"osx" : "PRJ_PLATFORM_IS_OSX",
 	}
 
+def get_cpp_standards():
+	return [
+		"11",
+		"14",
+		"17"
+	]
+
 def _decode_project_name(abs_file_path):
 	_, filename = os.path.split(abs_file_path)
 
@@ -58,8 +65,9 @@ class Generator():
 		parser = argparse.ArgumentParser()
 
 		parser.add_argument('-o', '--out', dest="out", help='output folder path', nargs=1)
-		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths')
+		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths and stops')
 
+		parser.add_argument('-s', '--std', dest="standard", choices=get_cpp_standards(), help='c++ standard for the generated project')
 		#TODO
 		parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
 
@@ -88,6 +96,10 @@ class Generator():
 		self.output = None
 		if args.out != None:
 			self.output = args.out[0]
+
+		self.standard = "17"
+		if args.standard != None:
+			self.standard = args.standard
 
 		#self.global_defines = args.define
 
@@ -231,6 +243,8 @@ class Generator():
 		project_metadata["args"] = sys.argv
 		project_metadata["builder"] = self.builder
 		project_metadata["platform"] = self.platform
+		project_metadata["cpp-standard"] = self.standard
+
 		project_metadata["kind"] = kind
 		project_metadata["build"] = builder_solution_folder
 
@@ -347,7 +361,7 @@ class Generator():
 				arguments = arguments + [self.builder,self.platform]
 
 				output = subprocess.run(arguments)
-				print(output)
+				#print(output)
 			else:
 				raise Exception("Unknown dependency:" + path)
 
