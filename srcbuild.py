@@ -105,10 +105,13 @@ class Generator():
 
 		self.name = _decode_project_name(sys.argv[0])
 
-		print("\n--------------------------------------------:: " + self.name + " >>>")
+		print("\n------------------------------------------------------------------------------------------->`" + self.name + "`>")
 		#print("	>defines:" + str(self.global_defines))
 		if self.output != None:
-			print("	>output:" + self.output)
+			print(">out:" + self.output)
+
+		print("____________________________________________________________________________________________")
+		print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
 
 	def _validate_platfroms(self,platform_list):
 		known_list = get_platform_map()
