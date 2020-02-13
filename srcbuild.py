@@ -216,7 +216,7 @@ class Generator():
 
 		includes = kwargs.get("incl",None)
 		if(includes == None):
-			kwargs.get("include",[])
+			includes = kwargs.get("include",[])
 
 		src = kwargs.get("src",[])
 		defines = kwargs.get("defines",[])
