@@ -214,7 +214,10 @@ class Generator():
 
 	def run(self,kind, **kwargs):
 
-		includes = kwargs.get("incl",[])
+		includes = kwargs.get("incl",None)
+		if(includes == None):
+			kwargs.get("include",[])
+
 		src = kwargs.get("src",[])
 		defines = kwargs.get("defines",[])
 		depends = kwargs.get("depends",[])
