@@ -21,6 +21,22 @@ env_paths = {
 #################################################################################################
 #################################################################################################
 
+def prj_name_to_define(project_name):
+	return project_name.upper().replace("-","_")
+
+#def prj_name_to_global_define(project_name):#this define can be used to know what other projects are there
+#	return "global>SOLUTION_INCLUDES_" + prj_name_to_define(project_name)
+
+
+extra_target_defines = {
+	"pure-dll" : ["private>PRJ_TARGET_PURE_DLL","private>PRJ_TARGET_DLL"],
+	"dll" : ["private>PRJ_TARGET_DLL"],
+
+	"lib" : ["private>PRJ_TARGET_LIB"],
+	"exe" : ["private>PRJ_TARGET_EXE"],
+	"view" : [],
+}
+
 def get_builder_map():
 	return {
 		"msvc" : "PRJ_BUILDER_IS_VS2019" , #latest
@@ -65,16 +81,19 @@ class Generator():
 		parser = argparse.ArgumentParser()
 
 		parser.add_argument('-o', '--out', dest="out", help='output folder path', nargs=1)
+		#parser.add_argument('-b', '--bin', dest="bin", help='compiled solution binary output folder path', nargs=1)
 		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths and stops')
+
 
 		parser.add_argument('-s', '--std', dest="standard", choices=get_cpp_standards(), help='c++ standard for the generated project')
 		#TODO
-		parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
+		#parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
 
 		parser.add_argument('builder', nargs='?', choices=get_builder_map().keys(), help='tool used to build stuff, like your ide')
 		parser.add_argument('platform', nargs='?', choices=get_platform_map().keys(), help='target platform')
 
 		args = parser.parse_args()
+		self.cmd_args = args
 
 		if args.env_paths == True:
 			print(json.dumps(env_paths, indent=4, sort_keys=True))
@@ -100,8 +119,6 @@ class Generator():
 		self.standard = "17"
 		if args.standard != None:
 			self.standard = args.standard
-
-		#self.global_defines = args.define
 
 		self.name = _decode_project_name(sys.argv[0])
 
@@ -216,7 +233,7 @@ class Generator():
 
 		includes = kwargs.get("incl",None)
 		if(includes == None):
-			includes = kwargs.get("include",[])
+			kwargs.get("include",[])
 
 		src = kwargs.get("src",[])
 		defines = kwargs.get("defines",[])
@@ -232,6 +249,9 @@ class Generator():
 		defines.append(get_platform_map()[self.platform])
 		defines.append(get_builder_map()[self.builder])
 		defines.append(get_builder_family()[self.builder])
+		#defines.append(prj_name_to_local_define(self.name))
+		#defines.append(prj_name_to_global_define(self.name))
+		defines = defines + extra_target_defines.get(kind,[])
 
 		#calculate build output
 		builder_solution_folder = os.path.join(self.abs_project_path,"build",self.name + "_" + self.platform + "_" + self.builder )
@@ -246,7 +266,7 @@ class Generator():
 		project_metadata["name"] = self.name
 		project_metadata["generator-dir"] = self.abs_project_path
 
-		project_metadata["args"] = sys.argv
+		project_metadata["cmd-args"] = sys.argv
 		project_metadata["builder"] = self.builder
 		project_metadata["platform"] = self.platform
 		project_metadata["cpp-standard"] = self.standard
@@ -256,6 +276,7 @@ class Generator():
 
 		#defines
 		(_public_defines,_private_defines,_global_defines) = self._evaluate_defines(defines)
+
 
 		project_metadata["public-defines"] = list(set(_public_defines))
 		project_metadata["private-defines"] = list(set(_private_defines))

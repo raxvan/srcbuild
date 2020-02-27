@@ -19,7 +19,7 @@ local _global_optimize_flags = "Speed"
 
 workspace "_this_"
 	location(".")
-	configurations { "Debug", "Release", "Development", "DevRelease" }
+	configurations { "Debug", "Release", "Development", "ReleaseForDebug" }
 	platforms { "x32", "x64", "ARM" }
 
 	filter "platforms:x32"
@@ -36,6 +36,8 @@ workspace "_this_"
 premake_project_kind = {
 	"exe" : "ConsoleApp",
 	"lib" : "StaticLib",
+	#"pure-dll" : "SharedLib",
+	"dll" : "SharedLib",
 	"view" : "StaticLib",
 }
 premake_platform_map = {
@@ -89,7 +91,7 @@ project "__NAME__"
 		staticruntime "On"
 		runtime "Debug"
 
-	configuration "DevRelease"
+	configuration "ReleaseForDebug"
 		optimize (_global_optimize_flags)
 		symbols "On"
 		staticruntime "Off"
@@ -100,7 +102,7 @@ project "__NAME__"
 		["Debug"] = "Debug",
 		["Release"] = "Release",
 		["Development"] = "Development",
-		["DevRelease"] = "DevRelease",
+		["ReleaseForDebug"] = "ReleaseForDebug",
 	}
 """
 
