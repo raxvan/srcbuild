@@ -234,6 +234,8 @@ class Generator():
 		includes = kwargs.get("incl",None)
 		if(includes == None):
 			kwargs.get("include",[])
+		if(includes == None):
+			includes = [] #it really has no includes
 
 		src = kwargs.get("src",[])
 		defines = kwargs.get("defines",[])
