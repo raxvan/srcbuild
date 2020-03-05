@@ -19,7 +19,7 @@ local _global_optimize_flags = "Speed"
 
 workspace "_this_"
 	location(".")
-	configurations { "Debug", "Release", "Development", "ReleaseForDebug" }
+	configurations { "Debug", "Release", "ReleaseForDebug" }
 	platforms { "x32", "x64", "ARM" }
 
 	filter "platforms:x32"
@@ -78,30 +78,27 @@ project "__NAME__"
 		cppdialect "__STANDARD__"
 	}
 
-	configuration "Debug"
+	configuration "Debug" --shared debug runtime
 		defines { "DEBUG" }
 		symbols "On"
 
-	configuration "Release"
+	configuration "Release" --static release runtime
 		optimize (_global_optimize_flags)
-
-	configuration "Development"
-		optimize "Off"
 		symbols "On"
 		staticruntime "On"
-		runtime "Debug"
+		runtime "Release"
 
-	configuration "ReleaseForDebug"
+	configuration "ReleaseForDebug" --shared debug runtime
 		optimize (_global_optimize_flags)
-		symbols "On"
 		staticruntime "Off"
+
+		symbols "On"
 		runtime "Debug"
 
 
 	configmap {
 		["Debug"] = "Debug",
 		["Release"] = "Release",
-		["Development"] = "Development",
 		["ReleaseForDebug"] = "ReleaseForDebug",
 	}
 """
