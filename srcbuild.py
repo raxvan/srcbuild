@@ -44,21 +44,24 @@ extra_target_defines = {
 
 def get_builder_map():
 	return {
+		"vs" : "PRJ_BUILDER_IS_VS2019" , #latest
 		"msvc" : "PRJ_BUILDER_IS_VS2019" , #latest
+
 		"vs2019" : "PRJ_BUILDER_IS_VS2019" ,
 		"vs2017" : "PRJ_BUILDER_IS_VS2017" ,
 		"vs2015" : "PRJ_BUILDER_IS_VS2015" ,
 		"make" : "PRJ_BUILDER_IS_MAKE" ,
 	}
 
-def get_builder_family():
-	return {
-		"msvc" : "PRJ_BUILDER_FAMILY_MSVC" , #latest
-		"vs2019" : "PRJ_BUILDER_FAMILY_MSVC" ,
-		"vs2017" : "PRJ_BUILDER_FAMILY_MSVC" ,
-		"vs2015" : "PRJ_BUILDER_FAMILY_MSVC" ,
-		"make" : "PRJ_BUILDER_IS_MAKE" ,
-	}
+#def get_builder_family():
+#	return {
+#		"vs" : "PRJ_BUILDER_FAMILY_MSVC" , #latest
+#		"msvc" : "PRJ_BUILDER_FAMILY_MSVC" , #latest
+#		"vs2019" : "PRJ_BUILDER_FAMILY_MSVC" ,
+#		"vs2017" : "PRJ_BUILDER_FAMILY_MSVC" ,
+#		"vs2015" : "PRJ_BUILDER_FAMILY_MSVC" ,
+#		"make" : "PRJ_BUILDER_IS_MAKE" ,
+#	}
 
 def get_platform_map():
 	return {
@@ -69,12 +72,18 @@ def get_platform_map():
 		"osx" : "PRJ_PLATFORM_IS_OSX",
 	}
 
+def get_diagnostics_defines():
+	return [
+		"global>ENABLE_AUTOMATIC_DIAGNOSTICS"
+	]
+
 def get_cpp_standards():
 	return [
 		"11",
 		"14",
 		"17"
 	]
+
 
 def _decode_project_name(abs_file_path):
 	_, filename = os.path.split(abs_file_path)
@@ -89,13 +98,13 @@ class Generator():
 		#parser.add_argument('-b', '--bin', dest="bin", help='compiled solution binary output folder path', nargs=1)
 		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths and stops')
 
-
-		parser.add_argument('-s', '--std', dest="standard", choices=get_cpp_standards(), help='c++ standard for the generated project')
 		#TODO
 		#parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
-
-		parser.add_argument('builder', nargs='?', choices=get_builder_map().keys(), help='tool used to build stuff, like your ide')
-		parser.add_argument('platform', nargs='?', choices=get_platform_map().keys(), help='target platform')
+		requiredNamed = parser.add_argument_group('required arguments')
+		requiredNamed.add_argument('builder', choices=get_builder_map().keys(), help='Tool used to build stuff, like your ide.')
+		requiredNamed.add_argument('platform', choices=get_platform_map().keys(), help='Target platform.')
+		#parser.add_argument('builder', nargs='?', choices=get_builder_map().keys(), help='tool used to build stuff, like your ide')
+		#parser.add_argument('platform', nargs='?', choices=get_platform_map().keys(), help='target platform')
 
 		args = parser.parse_args()
 		self.cmd_args = args
@@ -117,13 +126,10 @@ class Generator():
 
 		self.builder = args.builder
 		self.platform = args.platform
+
 		self.output = None
 		if args.out != None:
 			self.output = args.out[0]
-
-		self.standard = "17"
-		if args.standard != None:
-			self.standard = args.standard
 
 		self.name = _decode_project_name(sys.argv[0])
 
@@ -249,6 +255,17 @@ class Generator():
 		depends = kwargs.get("depends",[])
 		extra_libs = kwargs.get("libs",[])
 
+		standard = kwargs.get("std",None)
+		if standard == None:
+			standard = kwargs.get("standard",None)
+		if standard == None:
+			standard = "17"
+
+		diagnostics_flag = kwargs.get("diagnostics",None)
+		if diagnostics_flag == None:
+			diagnostics_flag = False
+
+
 		#fix types
 		if not type(includes) is list:
 			includes = [includes]
@@ -256,12 +273,16 @@ class Generator():
 			src = [src]
 
 		#add builtin defines
+		defines = defines + extra_target_defines.get(kind,[])
 		defines.append(get_platform_map()[self.platform])
 		defines.append(get_builder_map()[self.builder])
-		defines.append(get_builder_family()[self.builder])
+		#defines.append(get_builder_family()[self.builder])
+		if diagnostics_flag:
+			defines = defines + get_diagnostics_defines()
 		#defines.append(prj_name_to_local_define(self.name))
 		#defines.append(prj_name_to_global_define(self.name))
-		defines = defines + extra_target_defines.get(kind,[])
+
+
 
 		#calculate build output
 		builder_solution_folder = os.path.join(self.abs_project_path,"build",self.name + "_" + self.platform + "_" + self.builder )
@@ -279,7 +300,7 @@ class Generator():
 		project_metadata["cmd-args"] = sys.argv
 		project_metadata["builder"] = self.builder
 		project_metadata["platform"] = self.platform
-		project_metadata["cpp-standard"] = self.standard
+		project_metadata["cpp-standard"] = standard
 
 		project_metadata["kind"] = kind
 		project_metadata["build"] = builder_solution_folder
