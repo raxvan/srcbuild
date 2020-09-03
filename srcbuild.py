@@ -24,16 +24,21 @@ env_paths = {
 def prj_name_to_define(project_name):
 	return project_name.upper().replace("-","_")
 
-#def prj_name_to_global_define(project_name):#this define can be used to know what other projects are there
-#	return "global>SOLUTION_INCLUDES_" + prj_name_to_define(project_name)
-
-
 extra_target_defines = {
-	"pure-dll" : ["private>PRJ_TARGET_PURE_DLL","private>PRJ_TARGET_DLL"],
-	"dll" : ["private>PRJ_TARGET_DLL"],
+	"pure-dll" : [
+			"private>PRJ_TARGET_PURE_DLL",
+			"private>PRJ_TARGET_DLL",
+		],
+	"dll" : [
+			"private>PRJ_TARGET_DLL"
+		],
 
-	"lib" : ["private>PRJ_TARGET_LIB"],
-	"exe" : ["private>PRJ_TARGET_EXE"],
+	"lib" : [
+			"private>PRJ_TARGET_LIB"
+		],
+	"exe" : [
+			"private>PRJ_TARGET_EXE"
+		],
 	"view" : [],
 }
 
@@ -231,17 +236,20 @@ class Generator():
 
 	def run(self,kind, **kwargs):
 
+		#get includes
 		includes = kwargs.get("incl",None)
 		if(includes == None):
-			kwargs.get("include",[])
+			includes = kwargs.get("include",None)
 		if(includes == None):
 			includes = [] #it really has no includes
 
+		#get everything else
 		src = kwargs.get("src",[])
 		defines = kwargs.get("defines",[])
 		depends = kwargs.get("depends",[])
 		extra_libs = kwargs.get("libs",[])
 
+		#fix types
 		if not type(includes) is list:
 			includes = [includes]
 		if not type(src) is list:
@@ -257,9 +265,9 @@ class Generator():
 
 		#calculate build output
 		builder_solution_folder = os.path.join(self.abs_project_path,"build",self.name + "_" + self.platform + "_" + self.builder )
-		alaternative_target = self.output
-		if alaternative_target != None:
-			builder_solution_folder = alaternative_target
+		speciffic_output_location = self.output
+		if speciffic_output_location != None:
+			builder_solution_folder = speciffic_output_location
 		if not os.path.exists(builder_solution_folder):
 			os.makedirs(builder_solution_folder)
 
@@ -279,13 +287,9 @@ class Generator():
 		#defines
 		(_public_defines,_private_defines,_global_defines) = self._evaluate_defines(defines)
 
-
 		project_metadata["public-defines"] = list(set(_public_defines))
 		project_metadata["private-defines"] = list(set(_private_defines))
 		project_metadata["global-defines"] = list(set(_global_defines))
-
-		#src
-		project_metadata["sources"] = list(set([str(self._solve_path(p)) for p in src]))
 
 		#incl
 		(_public_includes,_private_includes) = self._evaluate_includes(includes)
@@ -294,33 +298,42 @@ class Generator():
 		project_metadata["private-includes"] = _private_includes #[str(self._solve_path(p)) for p in private_includes]
 
 		#chain
-		(_public_dependency,_private_dependency) = self._evaluate_dependency_list(depends,builder_solution_folder)
+		(_public_dependency, _private_dependency, py_project_depends) = self._evaluate_dependency_list(depends)
 
-		project_metadata["public-dependency"] = _public_dependency #list(set(self._evaluate_dependency_list(depends,builder_solution_folder)))
-		project_metadata["private-dependency"] = _private_dependency #list(set(self._evaluate_dependency_list(depends,builder_solution_folder)))
+		project_metadata["public-dependency"] = _public_dependency
+		project_metadata["private-dependency"] = _private_dependency
 
-		#extra links
+		#src & extra links
+		project_metadata["sources"] = list(set([str(self._solve_path(p)) for p in src]))
 		project_metadata["links"] = list(set(extra_libs))
 
 		#sort lists
 		project_metadata["sources"].sort()
+		project_metadata["links"].sort()
+
 		project_metadata["public-defines"].sort()
 		project_metadata["private-defines"].sort()
 		project_metadata["global-defines"].sort()
-		project_metadata["links"].sort()
+
 
 		#dump json for reasoning
-		about_file = os.path.join(builder_solution_folder,self.name + ".prj.json")
-		self._write_final_project(about_file, project_metadata)
+		project_metadata_abs_file = os.path.join(builder_solution_folder,self.name + ".prj.json")
+		self._write_final_project(project_metadata_abs_file, project_metadata)
 
-		if(alaternative_target == None):
-			#load all projects
+		#run projects for all dependencyes
+		self._run_dependent_projects(py_project_depends,builder_solution_folder)
+
+		if(speciffic_output_location == None):
+			#load all dependent projects recursively if we are building here
 			project_stack = {
 				self.name : project_metadata
 			}
 			self._load_projects_recursive(builder_solution_folder, project_metadata['public-dependency'], project_stack)
 			self._load_projects_recursive(builder_solution_folder, project_metadata['private-dependency'], project_stack)
-			#run generator
+
+			#run generator on alternative projects
+			self._propagate_globals(project_stack)
+
 			self._run_generator(builder_solution_folder, project_stack)
 
 		return project_metadata
@@ -363,10 +376,11 @@ class Generator():
 
 		return (public_includes,private_includes)
 
-	def _evaluate_dependency_list(self,dependency_list,builder_solution_folder):
+	def _evaluate_dependency_list(self,dependency_list):
 
 		public_dependency = []
 		private_dependency = []
+		py_projects_depends = {}
 
 		result = []
 		for d in dependency_list:
@@ -379,22 +393,18 @@ class Generator():
 				path = path.replace("public>","")
 				target = public_dependency
 
-			target.append(_decode_project_name(path))
+			dependency_file_abs_path = self._find_project_path(path)
+			project_name = _decode_project_name(path);
 
-			dependency_file_path = self._find_project_path(path)
-			if dependency_file_path.endswith(".py"):
-				#esult.append(_decode_project_name(dependency_file_path))
+			target.append(project_name)
 
-				arguments = ["python3",dependency_file_path]
-				arguments = arguments + ["--out",builder_solution_folder]
-				arguments = arguments + [self.builder,self.platform]
-
-				output = subprocess.run(arguments)
-				#print(output)
+			if dependency_file_abs_path.endswith(".py"):
+				py_projects_depends[project_name] = dependency_file_abs_path
 			else:
 				raise Exception("Unknown dependency:" + path)
 
-		return (public_dependency,private_dependency)
+
+		return (public_dependency,private_dependency, py_projects_depends)
 
 	def _find_project_path(self,path):
 		p = os.path.join(self.abs_project_path,path)
@@ -412,7 +422,7 @@ class Generator():
 		p = self._find_project_path(path)
 		return os.path.relpath(p,self.abs_project_path)
 
-	def _run_generator(self, target_build_folder, project_stack):
+	def _propagate_globals(self, project_stack):
 
 		#propagate global properties
 		global_defines = []
@@ -422,9 +432,19 @@ class Generator():
 		for k,v in project_stack.items():
 			v['global-defines'] = global_defines
 
+	def _run_generator(self, target_build_folder, project_stack):
+
 		import generator_premake
 		generator_premake.run(self, target_build_folder, project_stack)
 
+	def _run_dependent_projects(self,dependency_map,builder_solution_folder):
+		for pname,dependency_file_abs_path in dependency_map.items():
+
+			arguments = ["python3",dependency_file_abs_path]
+			arguments = arguments + ["--out",builder_solution_folder]
+			arguments = arguments + [self.builder,self.platform]
+
+			output = subprocess.run(arguments)
 
 	def _write_final_project(self,  target_json_abs_path, result_json):
 		with open(target_json_abs_path, 'w') as fp:
