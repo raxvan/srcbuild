@@ -81,12 +81,14 @@ project "__NAME__"
 	configuration "Debug" --shared debug runtime
 		defines { "DEBUG" }
 		symbols "On"
+		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
 
 	configuration "Release" --static release runtime
 		optimize (_global_optimize_flags)
 		symbols "On"
 		staticruntime "On"
 		runtime "Release"
+		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
 
 	configuration "ReleaseForDebug" --shared debug runtime
 		optimize (_global_optimize_flags)
@@ -94,6 +96,7 @@ project "__NAME__"
 
 		symbols "On"
 		runtime "Debug"
+		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
 
 
 	configmap {
@@ -102,6 +105,13 @@ project "__NAME__"
 		["ReleaseForDebug"] = "ReleaseForDebug",
 	}
 """
+
+def get_custom_build_flags(item):
+	opts = []
+	if item["platform"] == "linux" and item["builder"] == "make":
+		opts.append("-lrt")
+
+	return ",".join(['"' + o + '"' for o in opts])
 
 def append_project_to_file(file_handle, ctx, target_build_folder, project_stack, item):
 
@@ -126,7 +136,8 @@ def append_project_to_file(file_handle, ctx, target_build_folder, project_stack,
 		"__KIND__" : premake_project_kind[item["kind"]],
 		"__PLATFORM__" : item["platform"],
 		"__BUILDER__" : item["builder"],
-		"__STANDARD__" : cpp_standards_map[item["cpp-standard"]]
+		"__STANDARD__" : cpp_standards_map[item["cpp-standard"]],
+		"__CUSTOM_BUILD_FLAGS__" : get_custom_build_flags(item),
 	}
 
 	#generator.premake.lua
