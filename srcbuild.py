@@ -15,19 +15,19 @@ import argparse
 #################################################################################################
 
 env_paths = {
-	"premake5" : os.getenv("PREMAKE5_EXE","/build/premake5/bin/release/premake5"),
+	"premake5" : os.getenv("PREMAKE5_EXE",None),
 }
 
 #################################################################################################
 #################################################################################################
 
 #ARGS:
-#include or incl: list
-#src: list
-#libs: list (optional, extra lib linkage)
-#defines: list
-#depends: list
-#standard: 11/14/17
+#include or incl: []
+#src: []
+#libs: [] (optional, extra lib linkage)
+#defines: []
+#depends: [] (prj.py)
+#standard: 11/14/17 (default 17)
 #diagnostics: bool (default False)
 #warnings: bool (default True)
 
