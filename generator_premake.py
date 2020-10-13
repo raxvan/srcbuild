@@ -82,6 +82,7 @@ project "__NAME__"
 		defines { "DEBUG" }
 		symbols "On"
 		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
+		linkoptions { __CUSTOM_LINK_FLAGS__ }
 
 	configuration "Release" --static release runtime
 		optimize (_global_optimize_flags)
@@ -89,6 +90,7 @@ project "__NAME__"
 		staticruntime "On"
 		runtime "Release"
 		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
+		linkoptions { __CUSTOM_LINK_FLAGS__ }
 
 	configuration "ReleaseForDebug" --shared debug runtime
 		optimize (_global_optimize_flags)
@@ -97,6 +99,7 @@ project "__NAME__"
 		symbols "On"
 		runtime "Debug"
 		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
+		linkoptions { __CUSTOM_LINK_FLAGS__ }
 
 
 	configmap {
@@ -109,7 +112,15 @@ project "__NAME__"
 def get_custom_build_flags(item):
 	opts = []
 	if item["platform"] == "linux" and item["builder"] == "make":
-		opts.append("-lrt")
+		opts.append("-lrt") #no idea for what
+		opts.append("-pthread") #for threading
+
+	return ",".join(['"' + o + '"' for o in opts])
+
+def get_custom_link_flags(item):
+	opts = []
+	if item["platform"] == "linux" and item["builder"] == "make":
+		opts.append("-lpthread") #for threading
 
 	return ",".join(['"' + o + '"' for o in opts])
 
@@ -138,6 +149,7 @@ def append_project_to_file(file_handle, ctx, target_build_folder, project_stack,
 		"__BUILDER__" : item["builder"],
 		"__STANDARD__" : cpp_standards_map[item["cpp-standard"]],
 		"__CUSTOM_BUILD_FLAGS__" : get_custom_build_flags(item),
+		"__CUSTOM_LINK_FLAGS__" : get_custom_link_flags(item),
 	}
 
 	#generator.premake.lua

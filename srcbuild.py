@@ -53,16 +53,6 @@ def get_builder_map():
 		"make" : "PRJ_BUILDER_IS_MAKE" ,
 	}
 
-#def get_builder_family():
-#	return {
-#		"vs" : "PRJ_BUILDER_FAMILY_MSVC" , #latest
-#		"msvc" : "PRJ_BUILDER_FAMILY_MSVC" , #latest
-#		"vs2019" : "PRJ_BUILDER_FAMILY_MSVC" ,
-#		"vs2017" : "PRJ_BUILDER_FAMILY_MSVC" ,
-#		"vs2015" : "PRJ_BUILDER_FAMILY_MSVC" ,
-#		"make" : "PRJ_BUILDER_IS_MAKE" ,
-#	}
-
 def get_platform_map():
 	return {
 		"win32" : "PRJ_PLATFORM_IS_WIN32",
@@ -147,6 +137,11 @@ class Generator():
 		for p in platform_list:
 			if not p in known_list:
 				raise Exception("Unknown platform filter `" + p + "` accepted platforms:\n" + "\n".join(known_list.keys()))
+
+	def is_platform(self,platform_kind):
+		if self.platform == platform_kind:
+			return True
+		return False
 
 	def get_platform_define(self):
 		return get_platform_map()[self.platform]
