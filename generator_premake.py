@@ -64,7 +64,7 @@ project "__NAME__"
 	language("C++")
 	location(".")
 	characterset("MBCS")
-	warnings("Extra")
+	warnings(__WARNINGS__)
 
 	includedirs { __INCL__ }
 
@@ -138,6 +138,10 @@ def append_project_to_file(file_handle, ctx, target_build_folder, project_stack,
 	if item['kind'] == "exe":
 		fixed_name = "_" + fixed_name
 
+	warnings_flag = "Off"
+	if item['options']['warnings'] == True:
+		warnings_flag = "Extra"
+
 	replacemap = {
 		"__NAME__" : fixed_name,
 		"__INCL__" : ",".join(['"' + ctx.final_path(target_build_folder,d) + '"' for d in all_includes]),
@@ -150,6 +154,7 @@ def append_project_to_file(file_handle, ctx, target_build_folder, project_stack,
 		"__STANDARD__" : cpp_standards_map[item["cpp-standard"]],
 		"__CUSTOM_BUILD_FLAGS__" : get_custom_build_flags(item),
 		"__CUSTOM_LINK_FLAGS__" : get_custom_link_flags(item),
+		"__WARNINGS__": '"' + warnings_flag + '"',
 	}
 
 	#generator.premake.lua

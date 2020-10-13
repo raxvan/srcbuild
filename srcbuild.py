@@ -21,6 +21,19 @@ env_paths = {
 #################################################################################################
 #################################################################################################
 
+#ARGS:
+#include or incl: list
+#src: list
+#libs: list (optional, extra lib linkage)
+#defines: list
+#depends: list
+#standard: 11/14/17
+#diagnostics: bool (default False)
+#warnings: bool (default True)
+
+#################################################################################################
+#################################################################################################
+
 def prj_name_to_define(project_name):
 	return project_name.upper().replace("-","_")
 
@@ -256,10 +269,9 @@ class Generator():
 		if standard == None:
 			standard = "17"
 
-		diagnostics_flag = kwargs.get("diagnostics",None)
-		if diagnostics_flag == None:
-			diagnostics_flag = False
-
+		diagnostics_flag = kwargs.get("diagnostics",False)
+		warnings_flag = kwargs.get("warnings",True)
+		
 
 		#fix types
 		if not type(includes) is list:
@@ -323,6 +335,11 @@ class Generator():
 		project_metadata["sources"] = list(set([str(self._solve_path(p)) for p in src]))
 		project_metadata["links"] = list(set(extra_libs))
 
+		#switches
+		project_metadata["options"] = {
+			"warnings" : warnings_flag,
+		}
+
 		#sort lists
 		project_metadata["sources"].sort()
 		project_metadata["links"].sort()
@@ -330,6 +347,8 @@ class Generator():
 		project_metadata["public-defines"].sort()
 		project_metadata["private-defines"].sort()
 		project_metadata["global-defines"].sort()
+		
+
 
 
 		#dump json for reasoning
