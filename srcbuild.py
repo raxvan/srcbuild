@@ -123,6 +123,7 @@ class Generator():
 		#p#rint(args)
 
 		top_calling_script = os.path.abspath((inspect.stack()[1])[1])
+		self.abs_project_py = top_calling_script
 		self.abs_project_path, _ = os.path.split(top_calling_script)
 
 		self.default_ext = default_extensions
@@ -271,7 +272,7 @@ class Generator():
 
 		diagnostics_flag = kwargs.get("diagnostics",False)
 		warnings_flag = kwargs.get("warnings",True)
-		
+
 
 		#fix types
 		if not type(includes) is list:
@@ -347,7 +348,7 @@ class Generator():
 		project_metadata["public-defines"].sort()
 		project_metadata["private-defines"].sort()
 		project_metadata["global-defines"].sort()
-		
+
 
 
 
@@ -442,12 +443,14 @@ class Generator():
 		return (public_dependency,private_dependency, py_projects_depends)
 
 	def _find_project_path(self,path):
-		p = os.path.join(self.abs_project_path,path)
+		p = os.path.abspath(os.path.join(self.abs_project_path,path))
 		if os.path.exists(p):
-			return os.path.abspath(p)
+			return p
 
-		raise Exception("Failed to locate path: `" + path + "` in:\n	" +
-			self.abs_project_path
+		raise Exception("Failed to locate path: `" + path + "`\n" +
+			"\tprj:" + self.abs_project_py + "\n" +
+			"\tdir:" + self.abs_project_path + "\n" +
+			"\texpected:" + p
 		)
 
 	def _solve_path(self,path):
