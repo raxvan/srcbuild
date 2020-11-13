@@ -80,6 +80,13 @@ def get_diagnostics_defines():
 		"global>ENABLE_AUTOMATIC_DIAGNOSTICS"
 	]
 
+def get_automation_defines():
+	return [
+		"global>ENABLE_AUTOMATION" # enables endles loos 
+	]
+
+
+
 def get_cpp_standards():
 	return [
 		"11",
@@ -100,6 +107,7 @@ class Generator():
 		parser.add_argument('-o', '--out', dest="out", help='output folder path', nargs=1)
 		#parser.add_argument('-b', '--bin', dest="bin", help='compiled solution binary output folder path', nargs=1)
 		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths and stops')
+		parser.add_argument('-a', '--automation', action="store_true", help='adds automation global define')
 
 		#TODO
 		#parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
@@ -115,6 +123,8 @@ class Generator():
 		if args.env_paths == True:
 			print(json.dumps(env_paths, indent=4, sort_keys=True))
 			exit()
+
+		self.config_automation = args.automation
 
 		if args.builder == None or args.platform == None:
 			print("Builder and platform is missing")
@@ -287,6 +297,9 @@ class Generator():
 		#defines.append(get_builder_family()[self.builder])
 		if diagnostics_flag:
 			defines = defines + get_diagnostics_defines()
+
+		if self.config_automation:
+			defines = defines + get_automation_defines()
 		#defines.append(prj_name_to_local_define(self.name))
 		#defines.append(prj_name_to_global_define(self.name))
 
