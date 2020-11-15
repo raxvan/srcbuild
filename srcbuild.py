@@ -85,8 +85,6 @@ def get_automation_defines():
 		"global>ENABLE_AUTOMATION" # enables endles loos 
 	]
 
-
-
 def get_cpp_standards():
 	return [
 		"11",

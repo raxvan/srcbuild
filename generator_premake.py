@@ -17,7 +17,7 @@ local _global_optimize_flags = "Speed"
 
 ---------------------------------------------------------------------------------------------
 
-workspace "_this_"
+workspace "__SOLUTION_NAME__"
 	location(".")
 	configurations { "Debug", "Release", "ReleaseForDebug" }
 	platforms { "x32", "x64", "ARM" }
@@ -166,11 +166,17 @@ def generate_project_str(replmap):
 		proj_data = proj_data.replace(word, value)
 	return "\n" + proj_data + "\n"
 
+def generate_header(context):
+	sname = "_" + context.name.replace("-","_")
+	return premake_workspace.replace("__SOLUTION_NAME__",sname)
+
 def run(context, target_build_folder, project_stack):
 
 	premake_path = os.path.join(target_build_folder,"generator.premake.lua")
 	f = open(premake_path,"w")
-	f.write(premake_workspace)
+
+	header = generate_header(context)
+	f.write(header)
 
 	for k,v in project_stack.items():
 		append_project_to_file(f, context, target_build_folder, project_stack, v)
