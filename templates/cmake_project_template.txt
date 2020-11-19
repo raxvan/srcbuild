@@ -35,10 +35,21 @@ target_compile_definitions(
 	__DEF__
 )
 
+
 if(__WARNINGS__) # YES/NO if warnings enabled
 	if(MSVC)
 		target_compile_options(__NAME__ PRIVATE /W4 /WX)
 	else()
 		target_compile_options(__NAME__ PRIVATE -Wall -Wextra -pedantic -Werror)
 	endif()
+else()
+	if(MSVC)
+		target_compile_options(__NAME__ PRIVATE /MP)
+	else()
+		target_compile_options(__NAME__ PRIVATE -fms-extensions)
+	endif()
 endif()
+
+
+
+
