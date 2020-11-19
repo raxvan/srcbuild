@@ -66,6 +66,7 @@ def get_builder_map():
 		"vs2017" : "PRJ_BUILDER_IS_VS2017" ,
 		"vs2015" : "PRJ_BUILDER_IS_VS2015" ,
 		"make" : "PRJ_BUILDER_IS_MAKE" ,
+		"cmake" : "PRJ_BUILDER_IS_CMAKE" ,
 	}
 
 def get_platform_map():
@@ -484,9 +485,12 @@ class Generator():
 			v['global-defines'] = global_defines
 
 	def _run_generator(self, target_build_folder, project_stack):
-
-		import generator_premake
-		generator_premake.run(self, target_build_folder, project_stack)
+		if self.builder == "cmake":
+			import generator_cmake
+			generator_cmake.run(self, target_build_folder, project_stack)
+		else:
+			import generator_premake
+			generator_premake.run(self, target_build_folder, project_stack)
 
 
 	def _run_dependent_projects(self,dependency_map,builder_solution_folder):

@@ -1,0 +1,36 @@
+
+cmake_minimum_required(VERSION 3.16)
+
+# set the project name
+project(__NAME__)
+
+set(CMAKE_CXX_STANDARD __STANDARD__)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+__ADD_TYPE__(
+	__NAME__ __ADD_TYPE_DATA__
+	__SRC__
+)
+
+target_include_directories(
+	__NAME__ PRIVATE
+	__INCL__
+)
+
+target_link_libraries(
+	__NAME__ PRIVATE
+	__LINKS__
+)
+
+target_compile_definitions(
+	__NAME__ PRIVATE
+	__DEF__
+)
+
+if(__WARNINGS__) # YES/NO if warnings enabled
+	if(MSVC)
+		target_compile_options(__NAME__ PRIVATE /W4 /WX)
+	else()
+		target_compile_options(__NAME__ PRIVATE -Wall -Wextra -pedantic -Werror)
+	endif()
+endif()

@@ -14,23 +14,24 @@ _this_dir = os.path.dirname(os.path.abspath(__file__))
 
 premake_workspace = ciutil.read_text_file(os.path.join(_this_dir,"templates","premake_workspace_template.txt")) 
 
+premake_platform_map_arg = {
+	"win32" : "windows",
+	"linux" : "linux",
+}
+premake_builder_map_arg = {
+	"msvc" : "vs2019", #latest
+	"vs2019" : "vs2019",
+	"vs2017" : "vs2017",
+	"vs2015" : "vs2015",
+	"make" : "gmake",
+}
+
 premake_project_kind = {
 	"exe" : "ConsoleApp",
 	"lib" : "StaticLib",
 	#"pure-dll" : "SharedLib",
 	"dll" : "SharedLib",
 	"view" : "StaticLib",
-}
-premake_platform_map = {
-	"win32" : "windows",
-	"linux" : "linux",
-}
-premake_builder_map = {
-	"msvc" : "vs2019", #latest
-	"vs2019" : "vs2019",
-	"vs2017" : "vs2017",
-	"vs2015" : "vs2015",
-	"make" : "gmake",
 }
 
 cpp_standards_map = {
@@ -116,8 +117,8 @@ def run(context, target_build_folder, project_stack):
 
 	f.close()
 
-	premake_os = premake_platform_map[context.platform]
-	premake_builder = premake_builder_map[context.builder]
+	premake_os = premake_platform_map_arg[context.platform]
+	premake_builder = premake_builder_map_arg[context.builder]
 
 	output = subprocess.run([context.envget("premake5"),"--verbose","--os=" + premake_os,"--file=" + premake_path,premake_builder])
 	return output

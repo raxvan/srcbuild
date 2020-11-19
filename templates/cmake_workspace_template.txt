@@ -1,0 +1,9 @@
+
+cmake_minimum_required(VERSION 3.16)
+
+# set the project name
+project(__SOLUTION_NAME__)
+
+# example: add_subdirectory(PATH) ..
+
+
