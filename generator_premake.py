@@ -42,7 +42,6 @@ cpp_standards_map = {
 
 premake_project_template = ciutil.read_text_file(os.path.join(_this_dir,"templates","premake_project_template.txt")) 
 
-
 def get_custom_build_flags(item):
 	opts = []
 	if item["platform"] == "linux" and item["builder"] == "make":
@@ -57,7 +56,6 @@ def get_custom_link_flags(item):
 	opts = []
 	if item["platform"] == "linux" and item["builder"] == "make":
 		opts.append("-lpthread") #for threading
-
 
 	return ",".join(['"' + o + '"' for o in opts])
 
