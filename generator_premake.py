@@ -48,6 +48,8 @@ def get_custom_build_flags(item):
 	if item["platform"] == "linux" and item["builder"] == "make":
 		opts.append("-lrt") #no idea for what
 		opts.append("-pthread") #for threading
+	elif item["platform"] == "win32" and item["builder"] in ["msvc","vs2019","vs2017","vs2015"]:
+		opts.append("/MP") #enable multiprocessos compilation
 
 	return ",".join(['"' + o + '"' for o in opts])
 
@@ -55,6 +57,7 @@ def get_custom_link_flags(item):
 	opts = []
 	if item["platform"] == "linux" and item["builder"] == "make":
 		opts.append("-lpthread") #for threading
+
 
 	return ",".join(['"' + o + '"' for o in opts])
 
