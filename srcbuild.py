@@ -12,6 +12,8 @@ import inspect
 import subprocess
 import argparse
 
+#_this_dir = os.path.dirname(os.path.abspath(__file__))
+
 #################################################################################################
 
 env_paths = {
@@ -485,6 +487,7 @@ class Generator():
 
 		import generator_premake
 		generator_premake.run(self, target_build_folder, project_stack)
+
 
 	def _run_dependent_projects(self,dependency_map,builder_solution_folder):
 		for pname,dependency_file_abs_path in dependency_map.items():

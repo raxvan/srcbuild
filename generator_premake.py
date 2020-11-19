@@ -8,30 +8,11 @@ import glob
 import re
 import subprocess
 import json
+import ciutil
 
-premake_workspace = """
+_this_dir = os.path.dirname(os.path.abspath(__file__))
 
----------------------------------------------------------------------------------------------
-local _global_optimize_flags = "Speed"
----------------------------------------------------------------------------------------------
-
----------------------------------------------------------------------------------------------
-
-workspace "__SOLUTION_NAME__"
-	location(".")
-	configurations { "Debug", "Release", "ReleaseForDebug" }
-	platforms { "x32", "x64", "ARM" }
-
-	filter "platforms:x32"
-		kind "StaticLib"
-		architecture "x32"
-	filter "platforms:x64"
-		kind "StaticLib"
-		architecture "x64"
-	filter "platforms:ARM"
-		kind "StaticLib"
-		architecture "ARM"
-"""
+premake_workspace = ciutil.read_text_file(os.path.join(_this_dir,"templates","premake_workspace_template.txt")) 
 
 premake_project_kind = {
 	"exe" : "ConsoleApp",
@@ -58,56 +39,8 @@ cpp_standards_map = {
 	"17" : "C++17"
 }
 
-premake_project_template = """
-project "__NAME__"
-	kind("__KIND__")
-	language("C++")
-	location(".")
-	characterset("MBCS")
-	warnings(__WARNINGS__)
+premake_project_template = ciutil.read_text_file(os.path.join(_this_dir,"templates","premake_project_template.txt")) 
 
-	includedirs { __INCL__ }
-
-	files { __SRC__ }
-
-	defines { __DEF__ }
-
-	links { __LINKS__ }
-
-	flags {
-		cppdialect "__STANDARD__"
-	}
-
-	configuration "Debug" --shared debug runtime
-		defines { "DEBUG" }
-		symbols "On"
-		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
-		linkoptions { __CUSTOM_LINK_FLAGS__ }
-
-	configuration "Release" --static release runtime
-		optimize (_global_optimize_flags)
-		symbols "On"
-		staticruntime "On"
-		runtime "Release"
-		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
-		linkoptions { __CUSTOM_LINK_FLAGS__ }
-
-	configuration "ReleaseForDebug" --shared debug runtime
-		optimize (_global_optimize_flags)
-		staticruntime "Off"
-
-		symbols "On"
-		runtime "Debug"
-		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
-		linkoptions { __CUSTOM_LINK_FLAGS__ }
-
-
-	configmap {
-		["Debug"] = "Debug",
-		["Release"] = "Release",
-		["ReleaseForDebug"] = "ReleaseForDebug",
-	}
-"""
 
 def get_custom_build_flags(item):
 	opts = []

@@ -1,0 +1,20 @@
+---------------------------------------------------------------------------------------------
+local _global_optimize_flags = "Speed"
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+
+workspace "__SOLUTION_NAME__"
+	location(".")
+	configurations { "Debug", "Release", "ReleaseForDebug" }
+	platforms { "x32", "x64", "ARM" }
+
+	filter "platforms:x32"
+		kind "StaticLib"
+		architecture "x32"
+	filter "platforms:x64"
+		kind "StaticLib"
+		architecture "x64"
+	filter "platforms:ARM"
+		kind "StaticLib"
+		architecture "ARM"

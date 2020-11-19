@@ -56,3 +56,10 @@ def rmdir(dir_path):
 
 	os.rmdir(abs_dir)
 	_wait_for_remove(abs_dir)
+
+
+def read_text_file(abs_file_path):
+	f = open(abs_file_path,"r");
+	content = f.read()
+	f.close()
+	return content
