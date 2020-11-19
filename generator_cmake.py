@@ -59,8 +59,7 @@ def generate_cmakelists(ctx,target_build_folder, project_name, project_stack, it
 		"__BUILDER__" : item["builder"],
 		"__STANDARD__" : item["cpp-standard"],
 		"__WARNINGS__" : _warnings,
-		#"__CUSTOM_BUILD_FLAGS__" : get_custom_build_flags(item),
-		#"__CUSTOM_LINK_FLAGS__" : get_custom_link_flags(item),
+		"__KIND__" : item['kind']
 	}
 	cmakelists_dir = os.path.join(target_build_folder,"projects",project_name)
 	if not os.path.exists(cmakelists_dir):
