@@ -1,8 +1,11 @@
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.11)
 
 # set the project name
 project(__SOLUTION_NAME__)
+
+#set(IGNORE_CUSTOM_OUTPUT_DIRS 1)
+#set(IGNORE_CUSTOM_CPP_STANDARD 1)
 
 # example: add_subdirectory(PATH) ..
 

@@ -12,8 +12,8 @@ import ciutil
 
 _this_dir = os.path.dirname(os.path.abspath(__file__))
 
-cmake_workspace = ciutil.read_text_file(os.path.join(_this_dir,"templates","cmake_workspace_template.txt")) 
-cmake_project = ciutil.read_text_file(os.path.join(_this_dir,"templates","cmake_project_template.txt")) 
+cmake_workspace = ciutil.read_text_file(os.path.join(_this_dir,"templates","cmake_workspace_template.txt"))
+cmake_project = ciutil.read_text_file(os.path.join(_this_dir,"templates","cmake_project_template.txt"))
 files_to_copy = {
 	"_cmake_generate_solution.bat" : os.path.join(_this_dir,"templates","cmake_generate_solution.bat")
 }
@@ -22,14 +22,14 @@ files_to_copy = {
 cmake_add_type = {
 	"exe" : "add_executable",
 	"lib" : "add_library",
-	
+
 	"dll" : "add_library",
 	"view" : "add_library",
 }
 cmake_add_type_data = {
 	"exe" : "",
 	"lib" : "STATIC",
-	
+
 	"dll" : "SHARED",
 	"view" : "STATIC",
 }
@@ -39,7 +39,7 @@ def generate_cmakelists(ctx,target_build_folder, project_name, project_stack, it
 	all_sources = ctx.collapse_sources( project_stack, item)
 	all_defines = ctx.collapse_defines( project_stack, item)
 	(all_local_libs,all_external_libs) = ctx.collapse_libs( project_stack, item)
-    
+
 	all_libs = list(set(all_local_libs + all_external_libs))
 	all_libs.sort()
 
@@ -49,8 +49,9 @@ def generate_cmakelists(ctx,target_build_folder, project_name, project_stack, it
 
 	replacemap = {
 		"__NAME__" : project_name,
-		"__INCL__" : "\n\t".join(["${CMAKE_SOURCE_DIR}/" + ctx.final_path(target_build_folder,d) for d in all_includes]),
-		"__SRC__" : "\n\t".join(["${CMAKE_SOURCE_DIR}/" + ctx.final_path(target_build_folder,d) for d in all_sources]),
+		#TODO relpath from target_build_folder from current folder ("projects")
+		"__INCL__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + ctx.final_path(target_build_folder,d) for d in all_includes]),
+		"__SRC__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + ctx.final_path(target_build_folder,d) for d in all_sources]),
 		"__DEF__" : "\n\t".join([d for d in all_defines]),
 		"__LINKS__" : "\n\t".join([d for d in all_libs]),
 		"__ADD_TYPE__" : cmake_add_type[item["kind"]],
@@ -76,13 +77,13 @@ def generate_cmakelists(ctx,target_build_folder, project_name, project_stack, it
 	f.close();
 
 def append_project_to_file(file_handle, ctx, target_build_folder, project_stack, item):
-    
+
 	project_name = item['name']
 	if item['kind'] == "exe":
 		project_name = "_" + project_name
 
 	generate_cmakelists(ctx, target_build_folder, project_name, project_stack, item);
-    
+
 	#add add_subdirectory()
 	file_handle.write("add_subdirectory(projects/" + project_name + ")\n")
 

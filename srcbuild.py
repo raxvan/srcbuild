@@ -80,12 +80,17 @@ def get_platform_map():
 
 def get_diagnostics_defines():
 	return [
-		"global>ENABLE_AUTOMATIC_DIAGNOSTICS"
+		"global>ENABLE_AUTOMATIC_DIAGNOSTICS" # used in test projects
 	]
 
 def get_automation_defines():
 	return [
-		"global>ENABLE_AUTOMATION" # enables endles loos 
+		"global>ENABLE_AUTOMATION" # enables endles loos; used in ci builds
+	]
+
+def get_legacy_defines():
+	return [
+		"global>LEGACY_ENABLED" # enables endles loos; used in ci builds
 	]
 
 def get_cpp_standards():
@@ -109,6 +114,7 @@ class Generator():
 		#parser.add_argument('-b', '--bin', dest="bin", help='compiled solution binary output folder path', nargs=1)
 		parser.add_argument('-e', '--env_paths', action="store_true", help='prints out known paths and stops')
 		parser.add_argument('-a', '--automation', action="store_true", help='adds automation global define')
+		parser.add_argument('-l', '--legacy', action="store_true", help='adds LEGACY_ENABLED define')
 
 		#TODO
 		#parser.add_argument('-d', '--dependency', action="store_true", help='prints all dependency projects')
@@ -125,13 +131,13 @@ class Generator():
 			print(json.dumps(env_paths, indent=4, sort_keys=True))
 			exit()
 
-		self.config_automation = args.automation
-
 		if args.builder == None or args.platform == None:
 			print("Builder and platform is missing")
 			exit()
 
-		#p#rint(args)
+		self.config_automation = args.automation
+		self.config_legacy = args.legacy
+
 
 		top_calling_script = os.path.abspath((inspect.stack()[1])[1])
 		self.abs_project_py = top_calling_script
@@ -301,6 +307,10 @@ class Generator():
 
 		if self.config_automation:
 			defines = defines + get_automation_defines()
+
+		if self.config_legacy:
+			defines = defines + get_legacy_defines()
+
 		#defines.append(prj_name_to_local_define(self.name))
 		#defines.append(prj_name_to_global_define(self.name))
 
