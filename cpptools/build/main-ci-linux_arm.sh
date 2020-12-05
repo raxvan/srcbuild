@@ -10,10 +10,20 @@ THIS_WORKSPACE=$2
 #build
 cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_make
 make config=debug_arm all
-#make config=release_arm all
+make config=release_arm all
+
+cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_cmake
+cmake .
+cmake --build . --config Debug
+
 
 #run exe
+cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_make
 ./bin/ARM/Debug/_info
-#./bin/ARM/Release/_info
+./bin/ARM/Release/_info
+
+
+cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_cmake
+./bin/_info
 
 
