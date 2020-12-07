@@ -79,16 +79,19 @@ def get_platform_map():
 	}
 
 def get_diagnostics_defines():
+	#added when project defines `diagnostics=True`
 	return [
-		"global>ENABLE_AUTOMATIC_DIAGNOSTICS" # used in test projects
+		"global>ENABLE_AUTOMATIC_DIAGNOSTICS" # used in test projects;
 	]
 
 def get_automation_defines():
+	#added with -a option
 	return [
 		"global>ENABLE_AUTOMATION" # enables endles loos; used in ci builds
 	]
 
 def get_legacy_defines():
+	#added with -a option
 	return [
 		"global>LEGACY_ENABLED" # enables endles loos; used in ci builds
 	]
@@ -351,10 +354,11 @@ class Generator():
 		project_metadata["private-includes"] = _private_includes #[str(self._solve_path(p)) for p in private_includes]
 
 		#chain
-		(_public_dependency, _private_dependency, py_project_depends) = self._evaluate_dependency_list(depends)
+		(_public_dependency, _private_dependency, _global_dependency, py_project_depends) = self._evaluate_dependency_list(depends)
 
 		project_metadata["public-dependency"] = _public_dependency
 		project_metadata["private-dependency"] = _private_dependency
+		project_metadata["global-dependency"] = _global_dependency
 
 		#src & extra links
 		project_metadata["sources"] = list(set([str(self._solve_path(p)) for p in src]))
@@ -390,6 +394,7 @@ class Generator():
 			}
 			self._load_projects_recursive(builder_solution_folder, project_metadata['public-dependency'], project_stack)
 			self._load_projects_recursive(builder_solution_folder, project_metadata['private-dependency'], project_stack)
+			self._load_projects_recursive(builder_solution_folder, project_metadata['global-dependency'], project_stack)
 
 			#run generator on alternative projects
 			self._propagate_globals(project_stack)
@@ -440,6 +445,7 @@ class Generator():
 
 		public_dependency = []
 		private_dependency = []
+		global_dependency = []
 		py_projects_depends = {}
 
 		result = []
@@ -453,6 +459,10 @@ class Generator():
 				path = path.replace("public>","")
 				target = public_dependency
 
+			if path.count("global>") > 0:
+				path = path.replace("global>","")
+				target = global_dependency
+
 			dependency_file_abs_path = self._find_project_path(path)
 			project_name = _decode_project_name(path);
 
@@ -464,7 +474,7 @@ class Generator():
 				raise Exception("Unknown dependency:" + path)
 
 
-		return (public_dependency,private_dependency, py_projects_depends)
+		return (public_dependency, private_dependency, global_dependency, py_projects_depends)
 
 	def _find_project_path(self,path):
 		p = os.path.abspath(os.path.join(self.abs_project_path,path))
@@ -526,6 +536,7 @@ class Generator():
 				project_stack[dep] = json_metadata
 				self._load_projects_recursive(build_directory, json_metadata['public-dependency'], project_stack)
 				self._load_projects_recursive(build_directory, json_metadata['private-dependency'], project_stack)
+				self._load_projects_recursive(build_directory, json_metadata['global-dependency'], project_stack)
 
 
 	def final_path(self, target_build_folder, itm):
