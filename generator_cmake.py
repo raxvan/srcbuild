@@ -14,8 +14,10 @@ _this_dir = os.path.dirname(os.path.abspath(__file__))
 
 cmake_workspace = ciutil.read_text_file(os.path.join(_this_dir,"templates","cmake_workspace_template.txt"))
 cmake_project = ciutil.read_text_file(os.path.join(_this_dir,"templates","cmake_project_template.txt"))
+
 files_to_copy = {
-	"_cmake_generate_solution.bat" : os.path.join(_this_dir,"templates","cmake_generate_solution.bat")
+	"_build.bat" : os.path.join(_this_dir,"templates","cmake_build.bat"),
+	"_build.sh" : os.path.join(_this_dir,"templates","cmake_build.sh"),
 }
 
 
@@ -47,6 +49,10 @@ def generate_cmakelists(ctx,target_build_folder, project_name, project_stack, it
 	if item['options']['warnings'] == True:
 		_warnings = "YES"
 
+	_threads = "NO"
+	if item['options']['threads'] == True:
+		_threads = "YES"
+
 	replacemap = {
 		"__NAME__" : project_name,
 		#TODO relpath from target_build_folder from current folder ("projects")
@@ -60,6 +66,7 @@ def generate_cmakelists(ctx,target_build_folder, project_name, project_stack, it
 		"__BUILDER__" : item["builder"],
 		"__STANDARD__" : item["cpp-standard"],
 		"__WARNINGS__" : _warnings,
+		"__THREADS__" : _threads,
 		"__KIND__" : item['kind']
 	}
 	cmakelists_dir = os.path.join(target_build_folder,"projects",project_name)

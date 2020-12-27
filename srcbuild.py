@@ -32,6 +32,12 @@ env_paths = {
 #standard: 11/14/17 (default 17)
 #diagnostics: bool (default False)
 #warnings: bool (default True)
+#threads: bool (default False) #compiler speciffic
+
+#################################################################################################
+
+#CMD ARGS:
+#"-a" added for ci projects
 
 #################################################################################################
 #################################################################################################
@@ -292,6 +298,7 @@ class Generator():
 
 		diagnostics_flag = kwargs.get("diagnostics",False)
 		warnings_flag = kwargs.get("warnings",True)
+		threads_flag = kwargs.get("threads",False)
 
 
 		#fix types
@@ -367,6 +374,7 @@ class Generator():
 		#switches
 		project_metadata["options"] = {
 			"warnings" : warnings_flag,
+			"threads" : threads_flag,
 		}
 
 		#sort lists

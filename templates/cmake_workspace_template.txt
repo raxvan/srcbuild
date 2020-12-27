@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.11)
 # set the project name
 project(__SOLUTION_NAME__)
 
+message("Config types: ${CMAKE_CONFIGURATION_TYPES}")
+message("Build type: ${CMAKE_BUILD_TYPE}")
+
 #set(IGNORE_CUSTOM_OUTPUT_DIRS 1)
 #set(IGNORE_CUSTOM_CPP_STANDARD 1)
 
