@@ -79,6 +79,6 @@ add_custom_command(
 	COMMAND ${CMAKE_COMMAND} -E copy
 		$<TARGET_FILE:__NAME__>
 		${CMAKE_CURRENT_SOURCE_DIR}/../../bin/$<CONFIG>/$<TARGET_FILE_NAME:__NAME__>
-	COMMENT "Copy step binary to ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${CMAKE_BUILD_TYPE}/"
+	COMMENT "Copy binary to ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${CMAKE_BUILD_TYPE}/"
 )
 
