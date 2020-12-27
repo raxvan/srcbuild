@@ -13,8 +13,9 @@ make config=debug_arm all
 make config=release_arm all
 
 cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_cmake
-cmake .
-cmake --build . --config Debug
+chmod +x _build.sh
+source _build.sh Debug
+source _build.sh Release
 
 
 #run exe
@@ -24,6 +25,7 @@ cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_make
 
 
 cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_cmake
-./bin/_info
+./bin/Debug/_info
+./bin/Release/_info
 
 

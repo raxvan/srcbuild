@@ -13,17 +13,16 @@ make config=debug_x64 all
 make config=release_x64 all
 
 cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_cmake
-cmake .
-cmake --build . --config Debug
+chmod +x _build.sh
+source _build.sh Debug
+source _build.sh Release
 
 
+#run executables
 cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_make
 ./bin/x64/Debug/_info
 ./bin/x64/Release/_info
 
 cd ${THIS_WORKSPACE}/srcbuild/cpptools/build/info_linux_cmake
-./bin/_info
-
-
-
-
+./bin/Debug/_info
+./bin/Release/_info
