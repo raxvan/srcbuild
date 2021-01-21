@@ -97,9 +97,9 @@ def get_automation_defines():
 	]
 
 def get_legacy_defines():
-	#added with -a option
+	#added from project config
 	return [
-		"global>LEGACY_ENABLED" # enables endles loos; used in ci builds
+		"global>LEGACY_ENABLED"
 	]
 
 def get_cpp_standards():
