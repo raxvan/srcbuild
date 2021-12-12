@@ -9,6 +9,3 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 #set(IGNORE_CUSTOM_CPP_STANDARD 1)
 
-
-
-

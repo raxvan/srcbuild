@@ -6,7 +6,7 @@
 	#include <sys/stat.h>
 #endif
 
-#ifdef PRJ_PLATFORM_IS_LINUX
+#ifdef BUILD_PLATFORM_LINUX
 	#include <unistd.h>
 #endif
 

@@ -1,9 +1,11 @@
+---------------------------------------------------------------------------------------------
+
 project "__NAME__"
 	kind("__KIND__")
 	language("C++")
 	location(".")
 	characterset("MBCS")
-	warnings(__WARNINGS__)
+	warnings("__WARNINGS__")
 
 	includedirs { __INCL__ }
 
@@ -17,13 +19,13 @@ project "__NAME__"
 		cppdialect "__STANDARD__"
 	}
 
-	configuration "Debug" --shared debug runtime
+	filter "configurations:Debug" --shared debug runtime
 		defines { "DEBUG" }
 		symbols "On"
 		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
 		linkoptions { __CUSTOM_LINK_FLAGS__ }
 
-	configuration "Release" --static release runtime
+	filter "configurations:Release" --static release runtime
 		optimize (_global_optimize_flags)
 		symbols "On"
 		staticruntime "On"
@@ -31,7 +33,7 @@ project "__NAME__"
 		buildoptions  { __CUSTOM_BUILD_FLAGS__ }
 		linkoptions { __CUSTOM_LINK_FLAGS__ }
 
-	configuration "ReleaseForDebug" --shared debug runtime
+	filter "configurations:ReleaseForDebug" --shared debug runtime
 		optimize (_global_optimize_flags)
 		staticruntime "Off"
 
@@ -46,3 +48,5 @@ project "__NAME__"
 		["Release"] = "Release",
 		["ReleaseForDebug"] = "ReleaseForDebug",
 	}
+	
+---------------------------------------------------------------------------------------------

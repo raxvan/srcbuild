@@ -1,0 +1,129 @@
+
+cmake_minimum_required(VERSION 3.11)
+
+# set the project name
+project(__NAME__)
+
+if(NOT DEFINED IGNORE_CUSTOM_CPP_STANDARD)
+	set(CMAKE_CXX_STANDARD __STANDARD__)
+	set(CMAKE_CXX_STANDARD_REQUIRED True)
+endif()
+
+list(APPEND CUSTOM_COMPILE_OPTIONS)
+list(APPEND CUSTOM_LINK_OPTIONS)
+
+##############################################################################################
+#CUSTOM_COMPILE_OPTIONS
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	# https://clang.llvm.org/docs/ClangCommandLineReference.html#optimization-level
+	list(APPEND CUSTOM_COMPILE_OPTIONS
+		"$<$<CONFIG:Debug>:-gfull>"
+		"$<$<CONFIG:Release>:-Ofast>"
+		"-fms-extensions"
+		"-pedantic"
+		"-Wno-gnu-zero-variadic-macro-arguments" # https://stackoverflow.com/questions/21266380/is-the-gnu-zero-variadic-macro-arguments-safe-to-ignore
+	)
+	list(APPEND CUSTOM_LINK_OPTIONS
+		"$<$<CONFIG:Debug>:-gfull>"
+		"$<$<CONFIG:Release>:-Ofast>"
+	)
+
+	if(__FULL_WARNINGS__) # full warnings ? YES/NO
+		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wall" "-Wextra" "-Werror")
+	elseif (__DISABLE_WARNINGS__) # disable warnings ? YES/NO
+		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wno-everything")
+	else()
+		list(APPEND CUSTOM_COMPILE_OPTIONS "-Werror")
+	endif()
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	list(APPEND CUSTOM_COMPILE_OPTIONS
+		"$<$<CONFIG:Release>:-Ofast>"
+		"-fms-extensions"
+		"-pedantic"
+	)
+	list(APPEND CUSTOM_LINK_OPTIONS
+		"$<$<CONFIG:Release>:-Ofast>"
+	)
+
+	if(__FULL_WARNINGS__) # full warnings ? YES/NO
+		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wall" "-Wextra" "-Werror")
+	elseif (__DISABLE_WARNINGS__) # disable warnings ? YES/NO
+		list(APPEND CUSTOM_COMPILE_OPTIONS "-w")
+	else()
+		list(APPEND CUSTOM_COMPILE_OPTIONS "-Werror")
+	endif()
+
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	# https://docs.microsoft.com/en-us/cpp/preprocessor/preprocessor-experimental-overview?view=msvc-170
+	list(APPEND CUSTOM_COMPILE_OPTIONS
+		"/MP"
+		#"/Zc:preprocessor"
+	)
+
+	if(__FULL_WARNINGS__) # full warnings ? YES/NO
+		list(APPEND CUSTOM_COMPILE_OPTIONS "/W4" "/WX")
+	elseif (__DISABLE_WARNINGS__) # disable warnings ? YES/NO
+		list(APPEND CUSTOM_COMPILE_OPTIONS "/W")
+	else()
+		list(APPEND CUSTOM_COMPILE_OPTIONS "/WX")
+	endif()
+
+endif()
+#elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+
+##############################################################################################
+#CUSTOM_LINK_OPTIONS
+
+if(__THREADS__) # using threads ? YES/NO
+	if(MSVC)
+		#empty
+	else()
+		find_package (Threads)
+		list(APPEND CUSTOM_LINK_OPTIONS ${CMAKE_THREAD_LIBS_INIT})
+	endif()
+endif()
+
+##############################################################################################
+
+__ADD_TYPE__(
+	__NAME__ __ADD_TYPE_DATA__
+	__SRC__
+)
+
+target_compile_definitions(
+	__NAME__ PRIVATE
+	"$<$<CONFIG:Debug>:DEBUG>"
+	"$<$<CONFIG:Release>:NDEBUG>"
+	__DEF__
+)
+
+target_include_directories(
+	__NAME__ PRIVATE
+	__INCL__
+)
+
+list(APPEND CUSTOM_LINK_OPTIONS
+	__LINKS__
+)
+
+##############################################################################################
+
+target_compile_options(__NAME__ PRIVATE
+	${CUSTOM_COMPILE_OPTIONS}
+)
+target_link_libraries(__NAME__ PRIVATE
+	${CUSTOM_LINK_OPTIONS}
+)
+
+##############################################################################################
+
+add_custom_command(
+	TARGET __NAME__ POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy
+		$<TARGET_FILE:__NAME__>
+		${CMAKE_CURRENT_SOURCE_DIR}/../../bin/$<CONFIG>/$<TARGET_FILE_NAME:__NAME__>
+	COMMENT "Copy binary to ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${CMAKE_BUILD_TYPE}/"
+)
+

@@ -2,8 +2,6 @@
 local _global_optimize_flags = "Speed"
 ---------------------------------------------------------------------------------------------
 
----------------------------------------------------------------------------------------------
-
 workspace "__SOLUTION_NAME__"
 	location(".")
 	configurations { "Debug", "Release", "ReleaseForDebug" }
@@ -18,3 +16,5 @@ workspace "__SOLUTION_NAME__"
 	filter "platforms:ARM"
 		kind "StaticLib"
 		architecture "ARM"
+
+---------------------------------------------------------------------------------------------
