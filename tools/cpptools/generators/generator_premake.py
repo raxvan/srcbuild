@@ -90,12 +90,13 @@ def _get_premake_builder_arg(options):
 
 ##################################################################################################################################
 
-def append_project_to_file(project_stack, target_build_folder, item):
+def append_project_to_file(projects_graph, target_build_folder, item):
 
-	all_includes = generator_query.query_include_paths(project_stack, item)
-	all_sources = generator_query.query_sources(project_stack, item)
-	all_defines = generator_query.query_defines(project_stack, item)
-	all_links = generator_query.query_libs(project_stack, item)
+	all_includes = generator_query.query_include_paths(projects_graph, item)
+	all_sources = generator_query.query_sources(projects_graph, item)
+	all_defines = generator_query.query_defines(projects_graph, item)
+	all_links = generator_query.query_libs(projects_graph, item)
+	extra_links = generator_query.query_extra_libs(projects_graph, item)
 
 	mrp = generator_query.make_relative_path
 
@@ -104,7 +105,10 @@ def append_project_to_file(project_stack, target_build_folder, item):
 		"__INCL__" : ",".join(['"' + mrp(d, target_build_folder) + '"' for d in all_includes]),
 		"__SRC__" : ",".join(['"' + mrp(d, target_build_folder) + '"' for d in all_sources]),
 		"__DEF__" : ",".join(['"' + d + '"' for d,_ in all_defines.items()]),
-		"__LINKS__" : ",".join(['"' + d + '"' for d in all_links]),
+		"__LINKS__" : ",".join(
+			['"' + d + '"' for d in all_links] + 
+			['"' + mrp(d, target_build_folder) + '"' for d in extra_links]
+		),
 		"__KIND__" : _get_project_kind(item),
 		"__STANDARD__" : _get_cpp_standard(item),
 		"__CUSTOM_BUILD_FLAGS__" : _get_custom_build_flags(item),
@@ -121,22 +125,22 @@ def generate_project_str(replmap):
 		proj_data = proj_data.replace(word, value)
 	return proj_data + "\n"
 
-def generate_header(root_project):
-	sname = "_" + root_project.get_name().replace("-","_")
+def generate_header(solution_name):
+	sname = "_" + solution_name.replace("-","_")
 	return premake_workspace.replace("__SOLUTION_NAME__",sname) + "\n"
 
-def run(project_stack, root_project, options, output_dir):
+def run(projects_graph, solution_name, options, output_dir):
 
 	premake_path = os.path.join(output_dir,"generator.premake.lua")
 	tout = open(premake_path,"w")
 
 	#solution entry
-	header = generate_header(root_project)
+	header = generate_header(solution_name)
 	tout.write(header)
 
 	#projects:
-	for k,v in project_stack.items():
-		content = append_project_to_file(project_stack, output_dir, v)
+	for _,v in projects_graph.items():
+		content = append_project_to_file(projects_graph, output_dir, v)
 		tout.write(content)
 
 	tout.close()
@@ -145,5 +149,5 @@ def run(project_stack, root_project, options, output_dir):
 	premake_os = _get_premake_os_arg(options)
 	premake_builder = _get_premake_builder_arg(options)
 
-	output = subprocess.run([os.getenv("PREMAKE5_EXE",None),"--verbose","--os=" + premake_os,"--file=" + premake_path, premake_builder])
-	return output
+	#output = subprocess.run([os.getenv("PREMAKE5_EXE",None),"--verbose","--os=" + premake_os,"--file=" + premake_path, premake_builder])
+	#return output

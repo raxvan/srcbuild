@@ -2,174 +2,86 @@
 import os
 import sys
 import json
+import argparse
 
 _this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(_this_dir,"impl"))
 sys.path.append(os.path.join(_this_dir,"tools","pytools"))
 
+import package_graph
+import package_config
 
-import package_builder
-import build_options
+def main_info(args):
+	path = os.path.abspath(args.path)
+	fwd = args.forward_arguments
 
-#################################################################################################
-#################################################################################################
+	mg = package_graph.ModuleGraph()
 
-def create_default_options(opt, builder, platform):
-	opt.create("builder",builder, ["vs", "vs2019", "vs2017", "vs2015", "cmake"])
-	opt.create("platform",platform, ["win32","linux"])
-	opt.create("cppstd","20", ["11","14","17","20"])
-	
-	opt.create("instruments", "true", ["true","false"])
-                             
-	#project defaults:
-	opt.create("warnings","full", ["off","default","full"])
+	mg.load_shallow([path])
 
-#################################################################################################
-#################################################################################################
-
-class CppPackageBuilder(package_builder.PackageBuilder):
-	def __init__(self, abs_path_to_constructor, options):
-		package_builder.PackageBuilder.__init__(self, abs_path_to_constructor, options)
-
-		self.incl = package_builder.PackageAggregator(self, self.content, ["include"])
-		self.src = package_builder.PackageAggregator(self, self.content, ["src"])
+	cfg = None
+	if args.configure == True:
+		cfg = mg.configure()
 
 
-#################################################################################################
-#################################################################################################
+	mg.print_info(args.pkey, args.psha, args.ppath, args.links)
 
+	if cfg != None:
+		print("-CONFIG:")
+		print(package_config.get_config_ini(cfg))
 
-def construct_package(ctx):
+def main_cmake(args):
+	_this_dir = os.path.dirname(os.path.abspath(__file__))
+	sys.path.append(os.path.join(_this_dir,"tools","cpptools"))
 
-	iname = ctx.get_name().upper().replace("-","_") + "_INSTRUMENTS"
-	iglobal = ctx.options.get_value_or_die("instruments")
-	instruments_enabled = ctx.options.get(iname, iglobal)
+	import cpp_solution_generator
 
-	#inherit options
-	ctx.prop("warnings", ctx.options.get("warnings")).tag("private")
+	target = args.target
+	path = args.path
 
-	platform_define_map = {
-		"win32" : "BUILD_PLATFORM_WIN32",
-		"linux" : "BUILD_PLATFORM_LINUX",
-	}
+	cpp_solution_generator.create_solution(path, target)
 
-	if instruments_enabled == "true":
-		ctx.prop(iname).tag("define").tag("global")
+def main(args):
 
-	if iglobal == "true":
-		ctx.prop("INSTRUMENTS_ENABLED").tag("define").tag("global")
+	acc = args.action
+	if acc == "info":
+		main_info(args)
 
-	ctx.prop(platform_define_map[ctx.options.get("platform")]).tag("define").tag("private")
-
-	package_builder.construct_package(ctx)
-
-
-def run_constructors(project_stack, root_project, opt):
-	print("SCANNING...")
-	
-	project_stack[root_project.get_name()] = root_project
-	construction_queue = [root_project]
-	index = 0
-	while len(construction_queue) > 0:
-
-		print("\t" + str(index) + ":" + ",".join([c.get_name() for c in construction_queue]))
-		index = index + 1
-		for c in construction_queue:
-			construct_package(c)
-
-		next_queue = []
-		for c in construction_queue:
-			for _dependency in c.content.dependency:
-				if not _dependency.get_name() in project_stack:
-					builder = CppPackageBuilder(_dependency.path.get_abs_path(), opt)
-
-					project_stack[builder.get_name()] = builder
-
-					next_queue.append(builder)
-
-		next_queue.sort(key=package_builder.get_package_priority)
-
-		construction_queue = next_queue
-
-def run_collect(project_stack, metadata_dir):
-	print("COLLECTING...")
-
-	output = {}
-
-	index = 0
-	for k , v in project_stack.items():
-		print("\t" + str(index) + ":" + v.get_name())
-		index = index + 1
-
-		data = {}
-
-		v.collect(data)
-
-		outfile = os.path.join(metadata_dir, v.get_name() + ".json")
-		f = open(outfile, "w")
-		f.write(json.dumps(data, indent=4, sort_keys=True))
-		f.close()
-
-		output[k] = data
-
-	return output
-
-
-def run_generator(projects_map, solution_name, options, output_dir):
-	print("GENERATING...")
-
-	sys.path.append(os.path.join(_this_dir,"impl","generators"))
-
-	builder = options.get_value_or_die("builder")
-	generator_map = {
-		"vs" : "premake",
-		"vs2019" : "premake",
-		"vs2017" : "premake",
-		"vs2015" : "premake",
-		"cmake" : "cmake",
-	}
-	generator = generator_map[builder]
-
-	if generator == "premake":
-		import generator_premake
-		generator_premake.run(projects_map, solution_name, options, output_dir)
-	elif generator == "cmake":
-		import generator_cmake
-		generator_cmake.run(projects_map, solution_name, options, output_dir)
-
-def main(builder, platform):
-	abs_entrypoint_path = os.path.abspath(sys.argv[1])
-	
-	opt = build_options.BuildOptions()
-
-	create_default_options(opt, builder, platform)
-	
-	root_project = CppPackageBuilder(abs_entrypoint_path, opt)
-
-	#create output directoryT
-	output_dir = package_builder.get_package_output(root_project, builder, platform)
-
-	print("OUTPUT: " + output_dir)
-
-	medatada_dir = os.path.join(output_dir,"metadata")
-	config_file = os.path.join(medatada_dir,"config.ini")
-	if os.path.exists(config_file):
-		opt.add_ini_config(config_file)
-	elif not os.path.exists(medatada_dir):
-		os.makedirs(medatada_dir)
-
-	project_stack = {}
-
-	run_constructors(project_stack, root_project, opt);
-
-	opt.save_ini_config(config_file)
-
-	run_collect(project_stack, medatada_dir)
-
-	run_generator(project_stack, root_project, opt, output_dir)
+	elif acc == "cmake":
+		main_cmake(args)	
 
 
 if __name__ == '__main__':
-	main(sys.argv[2],sys.argv[3])
+
+	#pack_database = sys.argv[1]
+	#workspace = sys.argv[2]
+
+	user_arguments = sys.argv[1:]
+
+	parser = argparse.ArgumentParser()
+	subparsers = parser.add_subparsers(description='Actions:')
+
+	#
+	info_parser = subparsers.add_parser('info', description='Show Information on a module')
+	info_parser.set_defaults(action='info')
+	info_parser.add_argument('-k', '--key', dest='pkey', action='store_true', help="Print module key.")
+	info_parser.add_argument('-s', '--sha', dest='psha', action='store_true', help="Print module sha.")
+	info_parser.add_argument('-p', '--path', dest='ppath', action='store_true', help="Print module absolute path.")
+	info_parser.add_argument('-l', '--links', dest='links', action='store_true', help="Print Links.")
+	info_parser.add_argument('-c', '--configure', dest='configure', action='store_true', help="Run configuration.")
+	info_parser.add_argument('path', help='Path to module to inspect')
+	info_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+
+	#list_parser = subparsers.add_parser('list', description='Lists package information.')
+	#list_parser.set_defaults(action='list')
+	
+	make_parser = subparsers.add_parser('cmake', description='Generate c++ solutions.')
+	make_parser.set_defaults(action='cmake')
+	make_parser.add_argument('target', choices=['win', 'linux'], help='Path to root module')
+	make_parser.add_argument('path', help='Path to root module')
+	make_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+
+	args = parser.parse_args(user_arguments)
+	main(args)
 
 

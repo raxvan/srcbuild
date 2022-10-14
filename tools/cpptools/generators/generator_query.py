@@ -56,6 +56,10 @@ def join_prop_values(result, pl):
 	for k,v in pl:
 		result[k] = v.value
 
+def join_prop_keys(result, pl):
+	for k,v in pl:
+		result.append(k)
+
 def query_defines(project_stack, root_project):
 
 	result = {}
@@ -86,8 +90,6 @@ def query_defines(project_stack, root_project):
 
 	return result
 
-
-
 def query_libs(project_stack, root_project):
 
 	result = []
@@ -101,11 +103,34 @@ def query_libs(project_stack, root_project):
 		for c in query_queue:
 			next_queue.extend(get_dependency_list(project_stack, c, visited_projects, True))
 
-			result.extend(c.content.query_props(["lib"]))
-
 			for _dependency in c.content.dependency:
 				result.append(_dependency.get_name())
 
 		query_queue = next_queue
 
 	return result
+
+def query_extra_libs(project_stack, root_project):
+
+	result = []
+
+	visited_projects = set()
+	query_queue = [root_project]
+
+	index = 0
+	while len(query_queue) > 0:
+
+		next_queue = []
+		for c in query_queue:
+			next_queue.extend(get_dependency_list(project_stack, c, visited_projects, index == 0))
+
+			result.extend(c.content.query_paths(["lib", "public"]))
+			if index == 0:
+				result.extend(c.content.query_paths(["lib", "private"]))
+
+		next_queue.sort(key=package_builder.get_package_priority)
+
+		query_queue = next_queue
+		index = index + 1
+		
+	return list(set([p.path.get_abs_path() for p in result]))

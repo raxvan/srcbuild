@@ -63,11 +63,11 @@ def _get_cpp_standard(item):
 
 ##################################################################################################################################
 
-def generate_cmakelists(project_stack, target_build_folder, item):
-	all_includes = generator_query.query_include_paths(project_stack, item)
-	all_sources = generator_query.query_sources(project_stack, item)
-	all_defines = generator_query.query_defines(project_stack, item)
-	all_links = generator_query.query_libs(project_stack, item)
+def generate_cmakelists(projects_graph, target_build_folder, item):
+	all_includes = generator_query.query_include_paths(projects_graph, item)
+	all_sources = generator_query.query_sources(projects_graph, item)
+	all_defines = generator_query.query_defines(projects_graph, item)
+	all_links = generator_query.query_libs(projects_graph, item)
 
 	mrp = generator_query.make_relative_path
 
@@ -101,26 +101,24 @@ def generate_cmakelists(project_stack, target_build_folder, item):
 
 	f.close();
 
-def append_project_to_file(solution_file, project_stack, target_build_folder, item):
-	generate_cmakelists(project_stack, target_build_folder, item);
+def append_project_to_file(solution_file, projects_graph, target_build_folder, item):
+	generate_cmakelists(projects_graph, target_build_folder, item);
 	solution_file.write("add_subdirectory(projects/" + _get_project_name(item) + ")\n")
 
-def generate_header(root_project):
-	sname = "_" + root_project.get_name().replace("-","_")
+def generate_header(solution_name):
+	sname = "_" + solution_name.replace("-","_")
 	return cmake_workspace.replace("__SOLUTION_NAME__",sname)
 
-def run(project_stack, root_project, options, output_dir):
+def run(projects_graph, solution_name, options, output_dir):
 
 	cmake_path = os.path.join(output_dir,"CMakeLists.txt")
 	f = open(cmake_path,"w")
 
-	header = generate_header(root_project)
+	header = generate_header(solution_name)
 	f.write(header)
 
-	#for k,v in project_stack.items():
-	#	append_project_to_file(f, context, target_build_folder, project_stack, v)
-	for k,v in project_stack.items():
-		append_project_to_file(f, project_stack, output_dir, v)
+	for _,v in projects_graph.items():
+		append_project_to_file(f, projects_graph, output_dir, v)
 
 	f.close()
 
