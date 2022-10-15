@@ -2,8 +2,8 @@
 
 def construct(ctx):
 	
-	ctx.prop("type","exe")
+	ctx.config("type","exe")
 
-	ctx.fscan("src: info")
+	ctx.fscan("src: ../src")
 	
 

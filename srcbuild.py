@@ -38,8 +38,9 @@ def main_cmake(args):
 
 	target = args.target
 	path = args.path
+	force = args.force
 
-	cpp_solution_generator.create_solution(path, target)
+	cpp_solution_generator.create_solution(path, target, force)
 
 def main(args):
 
@@ -77,6 +78,7 @@ if __name__ == '__main__':
 	
 	make_parser = subparsers.add_parser('cmake', description='Generate c++ solutions.')
 	make_parser.set_defaults(action='cmake')
+	make_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate solution")
 	make_parser.add_argument('target', choices=['win', 'linux'], help='Path to root module')
 	make_parser.add_argument('path', help='Path to root module')
 	make_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)

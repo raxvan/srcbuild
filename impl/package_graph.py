@@ -31,8 +31,19 @@ class ModuleLocator():
 
 		return os.path.abspath(os.path.join(current_module._abs_pipeline_dir, path))
 
+	def try_resolve_path(self, current_module, path, tags):
+		if "abspath" in tags:
+			if os.path.exists(path):
+				return path
+
+		path = os.path.abspath(os.path.join(current_module._abs_pipeline_dir, path))
+		if os.path.exists(path):
+			return path
+
+		return None
+
 	def resolve_abspath_or_die(self, current_module, path, tags):
-		p = self.resolve_abspath(current_module, path, tags)
+		p = self.resolve_path(current_module, path, tags)
 		if p == None or os.path.exists(p) == False:
 			modpath = current_module._abs_pipeline_path
 			raise Exception(f"Could not find path {path} in module {modpath}")
@@ -71,11 +82,11 @@ class Module():
 		dep = self.links.get(modkey,None)
 
 		if dep == None:
-			dep = package_utils.ModuleLink(abs_dep_path)
+			dep = package_utils.ModuleLink(abs_dep_path, tags)
 			self.links[modkey] = dep
 			self.graph._link_modules(self.key, modkey)
-
-		dep.tag(tags)
+		elif tags != None:
+			dep.tag(tags)
 
 		return dep
 
@@ -84,7 +95,7 @@ class Module():
 
 	def run_proc(self, procname, *args):
 		p = getattr(self.pipeline, procname)
-		return p(self.pipeline, *args)
+		return p(*args)
 
 	def get_package_dir(self):
 		return self._abs_pipeline_dir
@@ -155,8 +166,8 @@ class ModuleGraph():
 	def create_configurator(self):
 		return package_config.Configurator(self.locator)
 
-	def create_constructor(self):
-		return package_constructor.PackageConstructor(self.locator)
+	def create_constructor(self, target_module, config):
+		return package_constructor.PackageConstructor(self.locator, target_module, config)
 
 
 	def create_and_validate_module(self, modkey, modpath):

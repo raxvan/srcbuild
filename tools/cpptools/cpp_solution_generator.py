@@ -4,26 +4,21 @@ import sys
 
 import package_graph
 import package_config
-
+import package_constructor
 
 class Solution(package_graph.ModuleGraph):
-	def __init__(self, platform, builder):
+	def __init__(self, platform, builder, override_config):
 		package_graph.ModuleGraph.__init__(self)
 
 		self.platform = platform
 		self.builder = builder
-		self.output = None
 
-	def configure_output_dir(self, m):
-		self.output = os.path.join(m.get_package_dir(),"..","build",self.builder + "-" + m.get_name().replace(".","_").replace("-","_").lower())
-		self.output = os.path.abspath(self.output)
-		if not os.path.exists(self.output):
-			os.makedirs(self.output)
+		self.override_config = override_config
 
 	def create_configurator(self):
 		cfg = package_graph.ModuleGraph.create_configurator(self)
 
-		cfg.option("platform",self.platform,["msvc","cmake"])
+		cfg.option("platform",self.platform,["win32"])
 		cfg.option("builder",self.builder,["msvc","cmake"])
 		cfg.option("cppstd","17",["11","14","17","20"])
 		cfg.option("type","exe",["exe","slib"])
@@ -31,22 +26,38 @@ class Solution(package_graph.ModuleGraph):
 
 		return cfg
 
+	def generate(self, path):
+		m = self.load_shallow([path])[0]
 
-def generate_win_project(path):
+		output = os.path.join(m.get_package_dir(),"..","build",self.builder + "-" + m.get_name().replace(".","_").replace("-","_").lower())
+		output = os.path.abspath(output)
+		metaout = os.path.join(output, "modules")
+		if not os.path.exists(metaout):
+			os.makedirs(metaout)
+		
+		cfg = self.configure()
+		package_config.sync_config(cfg, os.path.join(output, "config.ini"), self.override_config)
+
+		all_modules = self.modules
+
+		for mk, m in all_modules.items():
+			pc = self.create_constructor(m, cfg)
+
+			m.run_proc("construct", pc)
+
+			package_constructor.save_json(pc, os.path.join(metaout,m.get_name() + ".json"))
+
+
+def generate_win_project(path, force):
 	path = os.path.abspath(path)
 
-	mg = Solution("win32","msvc")
-	m = mg.load_shallow([path])[0]
-
-	mg.configure_output_dir(m)
-
-	cfg = mg.configure()
+	mg = Solution("win32","msvc", force)
+	mg.generate(path)
 
 
-def create_solution(path, target):
+def create_solution(path, target, force):
 	if target == "win":
-		generate_win_project(path)
-
+		generate_win_project(path, force)
 
 
 """

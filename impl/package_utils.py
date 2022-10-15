@@ -35,13 +35,14 @@ class PackageEntry():
 		elif isinstance(utag, set):
 			self.tags = utag
 
-	def tag(self, utag):
-		if isinstance(utag, str):
-			self.tags.add(utag)
-		elif isinstance(utag, list):
-			self.tags = self.tags.union(set(utag))
-		elif isinstance(utag, set):
-			self.tags = self.tags.union(utag)
+	def join_tags(self, utag):
+		if utag != None:
+			if isinstance(utag, str):
+				self.tags.add(utag)
+			elif isinstance(utag, list):
+				self.tags = self.tags.union(set(utag))
+			elif isinstance(utag, set):
+				self.tags = self.tags.union(utag)
 		return self
 
 	def query_tags(self, tags_set):
@@ -62,8 +63,8 @@ class PathEntry(PackageEntry):
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class ModuleLink(PathEntry):
-	def __init__(self, abspath):
-		PathEntry.__init__(self, abspath)
+	def __init__(self, abspath, tags):
+		PathEntry.__init__(self, abspath, tags)
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
