@@ -74,82 +74,75 @@ class UserComponent(package_utils.PackageEntry):
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class Configurator():
-	def __init__(self, solver):
+	def __init__(self, solver, graph):
 
-		self.current_module = None
-		self.current_dependency = None
+		self.active_module = None
+		self.active_links = None
 
 		self.solver = solver
+		self.graph = graph
 
 		self._components = {}
 		self._options = {}
 
-	def _group_begin(self):
-		self.current_dependency = []
-		pass
-
-	def _group_end(self):
-		return self.current_dependency
-
 	def _configure_module(self, module):
-		self.current_module = module
+		self.active_module = module
+		self.active_links = []
 
-		try:
-			module.run_proc("configure",self)
-		except:
-			#AttributeError, in case it does not have configure confution, we carry on
-			pass
+		cfg_func = module.get_proc("configure")
+		if cfg_func != None:
+			cfg_func(self)
 
 		module.configured = True
-		self.current_module = None
+		self.active_module = None
+		return self.active_links
 
 	def _safe_modkey(self, abs_dep_path):
 		modkey = package_utils._path_to_modkey(abs_dep_path)
 
-		if (modkey == self.current_module.key):
+		if (modkey == self.active_module.key):
 			#depends on itself ?
 			raise Exception("Recursive link.")
 
 		return modkey
 
-	def _link_path(self, modkey, abs_dep_path, tags):
-		self.current_dependency.append((self.current_module, modkey, abs_dep_path))
-		return self.current_module._link_child_module(modkey, tags, abs_dep_path);
-
 	#api
 	def enable(self):
-		self.current_module.enabled = True
+		self.active_module.enabled = True
 
 	def disable(self):
-		self.current_module.enabled = False
+		self.active_module.enabled = False
 
 	def tag(self, tags):
-		self.current_module.tag(tags)
+		self.active_module.tag(tags)
 
 	def link(self, child_info):
 		# links child to current module (parent)
-		tags, value = package_utils._parse_key(child_info)
-		abs_dep_path = self.solver.resolve_abspath_or_die(self.current_module, value, tags)
-		modkey = self._safe_modkey(abs_dep_path)
-		return self._link_path(modkey, abs_dep_path, tags)
+		tags, path = package_utils._parse_key(child_info)
+		abs_module_path = self.solver.resolve_abspath_or_die(self.active_module, path, tags)
+		modkey = self._safe_modkey(abs_module_path)
 
-	def link_if_enabled(self, child_info):
-		# links child to current module (parent) if module exists
-		tags, value = package_utils._parse_key(child_info)
-		abs_dep_path = self.solver.try_resolve_path(self.current_module, value, tags)
-		modkey = self._safe_modkey(abs_dep_path)
-		if self.graph._module_enabled(modkey):
-			return self._link_path(modkey, abs_dep_path, tags)
-		return None
+		link = self.graph._create_link(self.active_module, modkey, abs_module_path, tags)
+		self.active_links.append(link.module)
+		return link
 
-	def link_if_any_tag(self, child_info, child_tags):
-		# links child to current module (parent) if module exists
-		tags, value = package_utils._parse_key(child_info)
-		abs_dep_path = self.solver.try_resolve_path(self.current_module, value, tags)
-		modkey = self._safe_modkey(abs_dep_path)
-		if self.graph._module_tags(modkey).intersection(child_tags):
-			return self._link_path(modkey, abs_dep_path, tags)
-		return None
+	#def link_if_enabled(self, child_info):
+	#	# links child to current module (parent) if module exists
+	#	tags, value = package_utils._parse_key(child_info)
+	#	abs_dep_path = self.solver.try_resolve_path(self.active_module, value, tags)
+	#	modkey = self._safe_modkey(abs_dep_path)
+	#	if self.graph._module_enabled(modkey):
+	#		return self._link_path(modkey, abs_dep_path, tags)
+	#	return None
+    #
+	#def link_if_any_tag(self, child_info, child_tags):
+	#	# links child to current module (parent) if module exists
+	#	tags, value = package_utils._parse_key(child_info)
+	#	abs_dep_path = self.solver.try_resolve_path(self.active_module, value, tags)
+	#	modkey = self._safe_modkey(abs_dep_path)
+	#	if self.graph._module_tags(modkey).intersection(child_tags):
+	#		return self._link_path(modkey, abs_dep_path, tags)
+	#	return None
 
 
 	def option(self, k, default_value, possible_values = None):

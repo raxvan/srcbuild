@@ -37,7 +37,10 @@ class Solution(package_graph.ModuleGraph):
 		return ProjectModule(modkey, modpath, self)
 
 	def generate(self, path):
-		root_module = self.load_shallow([path])[0]
+
+		cfg, root_modules = self.configure([path])
+
+		root_module = root_modules[0]
 
 		output = os.path.join(root_module.get_package_dir(),"..","build",self.builder + "-" + root_module.get_name().replace(".","_").replace("-","_").lower())
 		output = os.path.abspath(output)
@@ -45,11 +48,9 @@ class Solution(package_graph.ModuleGraph):
 		if not os.path.exists(metaout):
 			os.makedirs(metaout)
 
-		cfg = self.configure()
-
 		self.sync_config(os.path.join(output, "config.ini"), self.override_config)
 
-		self.forward_disable([root_module])
+		self.forward_disable(root_modules)
 
 		all_modules = self.modules
 
@@ -62,10 +63,15 @@ class Solution(package_graph.ModuleGraph):
 			m.content.config("type")
 			m.content.config("warnings")
 
-			m.run_proc("construct", m.content)
+			construct_proc = m.get_proc("construct")
+			if construct_proc == None:
+				raise Exception(f"Could not find construct in {m.get_name()}")
+
+			construct_proc(m.content)
 
 			#save json
 			j = {}
+			m.serialize(j)
 			m.content.serialize(j)
 			package_utils.save_json(j, os.path.join(metaout,m.get_name() + ".json"))
 

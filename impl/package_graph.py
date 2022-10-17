@@ -72,54 +72,62 @@ class Module(package_utils.PackageEntry):
 		self.links = {} #key==modkey, value==ModuleLink
 		#^ children
 
-		self.generation = graph.get_generation()
 		self.enabled = True
 		self.configured = False
 
-		self._config_priority = 0
-		if hasattr(self.pipeline, 'priority'):
-			self._config_priority = self.pipeline.priority()
+	def _create_child_link(self, modkey, tags, abs_dep_path):
+		if modkey in self.links:
+			raise Exception(f"Dependency to {abs_dep_path} already exists.")
 
-	def _link_child_module(self, modkey, tags, abs_dep_path):
-		dep = self.links.get(modkey,None)
-
-		if dep == None:
-			dep = package_utils.ModuleLink(abs_dep_path, tags)
-			self.links[modkey] = dep
-			self.graph._link_modules(self.key, modkey)
-		elif tags != None:
-			dep.tag(tags)
-
+		dep = package_utils.ModuleLink(abs_dep_path, tags)
+		self.links[modkey] = dep
+		
 		return dep
 
-	def _module_enabled(self, modkey):
-		cm = self.graph.modules.get(modkey, None)
-		if cm == None:
-			return False
+	#def _module_enabled(self, modkey):
+	#	cm = self.graph.modules.get(modkey, None)
+	#	if cm == None:
+	#		return False
+    #
+	#	if cm.enabled == False:
+	#		return False
+    #
+	#	return True
+    #
+	#def _module_tags(self, modkey):
+	#	cm = self.graph.modules.get(modkey, None)
+	#	if cm == None:
+	#		return set()
+    #
+	#	return cm.tags
 
-		if cm.enabled == False:
-			return False
+	def serialize(self, out):
+		out["name"] = self.get_name()
 
-		return True
+		out["enabled"] = self.enabled
+		out["configured"] = self.configured
+		out["key"] = self.key
+		out["sha"] = self.sha
 
-	def _module_tags(self, modkey):
-		cm = self.graph.modules.get(modkey, None)
-		if cm == None:
-			return set()
-
-		return cm.tags
+		links = {}
+		for lk,ld in self.links.items():
+			links[lk] = {
+				"path" : ld.path,
+				"tags" : list(ld.tags),
+			}
+		out["links"] = links
 
 
 
 	def get_name(self):
 		return self._name
 
-	def run_proc(self, procname, *args):
-		p = getattr(self.pipeline, procname)
+	def get_proc(self, procname):
 		try:
-			return p(*args)
+			return getattr(self.pipeline, procname)
+		except AttributeError:
+			return None
 		except:
-			print(f"Error executing {procname} in module {self._abs_pipeline_path} ")
 			raise
 
 	def get_package_dir(self):
@@ -165,9 +173,22 @@ class ModuleGraph():
 		self.configurator = None
 		self.locator = None
 
-	def _link_modules(self, parent, child):
-		self.forward_links.setdefault(parent,[]).append(child)
-		self.backward_links.setdefault(child,[]).append(parent)
+	def _create_link(self, parent_module, modkey, abs_module_path, tags):
+		link = parent_module._create_child_link(modkey, tags, abs_module_path)
+
+		chmod = self.modules.get(modkey, None)
+
+		if chmod == None:
+			chmod = self.create_and_validate_module(modkey, abs_module_path)
+			self.modules[modkey] = chmod
+			self.path_map[abs_module_path] = modkey
+
+		self.forward_links.setdefault(parent_module.key,[]).append(chmod.key)
+		self.backward_links.setdefault(chmod.key,[]).append(parent_module.key)
+
+		link.module = chmod
+
+		return link		
 
 	def get_module_with_path(self, p):
 		p = os.path.abspath(p)
@@ -184,9 +205,6 @@ class ModuleGraph():
 	def get_modules(self):
 		return [v for _,v in self.modules.items()]
 
-	def get_generation(self):
-		return self.age
-
 	#################################################################################################
 	#overloadable
 
@@ -197,7 +215,7 @@ class ModuleGraph():
 		return ModuleLocator()
 
 	def create_configurator(self):
-		return package_config.Configurator(self.locator)
+		return package_config.Configurator(self.locator, self)
 
 	def create_constructor(self, target_module, config):
 		return package_constructor.PackageConstructor(self.locator, target_module, config)
@@ -211,9 +229,6 @@ class ModuleGraph():
 
 		#if not hasattr(m.pipeline, 'configure'):
 		#	raise Exception(f"Module `{modpath}` is missing configure function!")
-
-		self.modules[modkey] = m
-		self.path_map[modpath] = modkey
 
 		return m
 
@@ -270,35 +285,8 @@ class ModuleGraph():
 		print("roots: " + str(self.roots))
 		print("leafs: " + str(self.leafs))
 
-	def _load_single_module(self, name):
-		modpath = os.path.abspath(name)
-		modkey = package_utils._path_to_modkey(modpath)
-		if modkey in self.modules:
-			return None
-
-		return self.create_and_validate_module(modkey, modpath)
-
-	def load_shallow(self, entrypoint_paths):
-		#returns modules list
-		confgure_queue = []
-		for e in entrypoint_paths:
-			m = self._load_single_module(e);
-			if m != None:
-				confgure_queue.append(m)
-		self.age = self.age + 1
-		return confgure_queue
-
-	def configure(self, confgure_queue = None):
+	def configure(self, entrypoints):
 		
-		if confgure_queue == None:
-			unconfigured_modules = [m for _,m in self.modules.items() if m.configured == False]
-			return self.configure(unconfigured_modules)
-
-		#load_queue is returned by load_shallow
-		if len(confgure_queue) == 0:
-			print("NOTHING TO LOAD...")
-			return
-
 		if self.locator == None:
 			self.locator = self.create_locator()
 
@@ -307,39 +295,35 @@ class ModuleGraph():
 
 		print("CONFIGURING...")
 
-		index = 0
-		while len(confgure_queue) > 0:
+		result = []
 
-			confgure_queue.sort(key=lambda m: m._config_priority)
+		for e in entrypoints:
+			modpath = os.path.abspath(e)
+			modkey = package_utils._path_to_modkey(modpath)
+			chmod = self.create_and_validate_module(modkey, modpath)
+			self.modules[modkey] = chmod
+			self.path_map[modpath] = modkey
+			result.append(chmod)
 
-			print("\t" + str(index) + ":" + ",".join([m.get_name() for m in confgure_queue]))
-			index = index + 1
+		module_stack = result
+		
+		while len(module_stack) > 0:
 
-			########################################################################################
-			#run module configuration
-			self.configurator._group_begin()
+			first_module = module_stack[0]
+			remaning_modules = module_stack[1:]
 
-			for m in confgure_queue:
-				if m.configured == False:
-					self.configurator._configure_module(m)
+			if first_module.configured:
+				module_stack = remaning_modules
+				continue
 
-			next_items = self.configurator._group_end()
-
-			########################################################################################
-			#load the actual module and queue for scanning
-			confgure_queue = []
-			for srcmod, modkey, modpath in next_items:
-				if modkey in self.modules:
-					continue
-				nextmod = self.create_and_validate_module(modkey, modpath)
-
-				confgure_queue.append(nextmod)
-
-			self.age = self.age + 1
+			print("\t"  + ":" + first_module.get_name())
+			loaded_links = self.configurator._configure_module(first_module)
+			
+			module_stack = loaded_links + module_stack
 
 		self.link_graph()
 
-		return self.configurator
+		return self.configurator, result
 
 	def link_graph(self):
 

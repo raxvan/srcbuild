@@ -8,6 +8,10 @@ def get_dependency_list(solution, pack, visited, scan_private):
 	next_queue = []
 	for _dependency_key, _dependency_metadata in pack.links.items():
 		_dependency = solution.get_module_with_key(_dependency_key)
+		
+		if _dependency.enabled == False:
+			continue
+
 		if _dependency.get_name() in visited:
 			continue
 

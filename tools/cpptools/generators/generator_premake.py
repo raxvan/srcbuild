@@ -120,7 +120,7 @@ class PremakeContext():
 			"__SRC__" : ",".join(['"' + mrp(d, target_build_folder) + '"' for d in all_sources]),
 			"__DEF__" : ",".join(['"' + d + '"' for d,_ in all_defines.items()]),
 			"__LINKS__" : ",".join(
-				['"' + d + '"' for d in all_links] +
+				['"' + d.get_name() + '"' for d in all_links] +
 				['"' + mrp(d, target_build_folder) + '"' for d in extra_links]
 			),
 			"__KIND__" : _get_project_kind(item),

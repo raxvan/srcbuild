@@ -27,7 +27,7 @@ class PackageConstructor():
 		if os.path.isdir(apath) == False:
 			raise Exception(f"Expected directory at {apath}")
 
-		self._files.append(apath)
+		self._folders.append(apath)
 
 		return entry
 
@@ -37,7 +37,7 @@ class PackageConstructor():
 		if os.path.isdir(apath) == False:
 			raise Exception(f"Expected file at {apath}")
 
-		self._folders.append(apath)
+		self._files.append(apath)
 
 		return entry
 

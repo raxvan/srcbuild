@@ -17,12 +17,7 @@ def main_info(args):
 
 	mg = package_graph.ModuleGraph()
 
-	mg.load_shallow([path])
-
-	cfg = None
-	if args.configure == True:
-		cfg = mg.configure()
-
+	cfg = mg.configure([path])
 
 	mg.print_info(args.pkey, args.psha, args.ppath, args.links)
 
@@ -69,7 +64,6 @@ if __name__ == '__main__':
 	info_parser.add_argument('-s', '--sha', dest='psha', action='store_true', help="Print module sha.")
 	info_parser.add_argument('-p', '--path', dest='ppath', action='store_true', help="Print module absolute path.")
 	info_parser.add_argument('-l', '--links', dest='links', action='store_true', help="Print Links.")
-	info_parser.add_argument('-c', '--configure', dest='configure', action='store_true', help="Run configuration.")
 	info_parser.add_argument('path', help='Path to module to inspect')
 	info_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
