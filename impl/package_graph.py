@@ -53,11 +53,11 @@ class ModuleLocator():
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class Module():
-	def __init__(self, modkey, abs_pipeline_path, parent_graph):
+	def __init__(self, modkey, abs_pipeline_path, graph):
 
 		p,s = _load_module(abs_pipeline_path, modkey)
 		
-		self.graph = parent_graph
+		self.graph = graph
 		self.pipeline = p
 
 		self.sha = s #content sha
@@ -71,6 +71,8 @@ class Module():
 		self.links = {} #key==modkey, value==ModuleLink
 		#^ children
 
+		self.generation = graph.get_generation()
+		self.enabled = True
 		self.configured = False
 
 
@@ -129,8 +131,10 @@ class ModuleGraph():
 		self.modules = {} #modkey/Module
 		self.path_map = {} #abs_path/modkey
 
-		self.forward_links = {} #modkey:parent -> modkey:children
-		self.backward_links = {} #modkey:child -> modkey:parents
+		self.age = 0
+
+		self.forward_links = {} #modkey:parent -> modkey:children []
+		self.backward_links = {} #modkey:child -> modkey:parents []
 
 		self.roots = None #modkey, modules with 0 parents
 		self.leafs = None #modkey, modules with 0 children
@@ -151,8 +155,14 @@ class ModuleGraph():
 
 		return self.modules[mk]
 
+	def get_module_with_key(self, k):
+		return self.modules.get(k,None)
+
 	def get_modules(self):
 		return [v for _,v in self.modules.items()]
+
+	def get_generation(self):
+		return self.age
 
 	#################################################################################################
 	#overloadable
@@ -188,6 +198,47 @@ class ModuleGraph():
 	#################################################################################################
 	#utils:
 
+	def forward_disable(self, modules_list):
+		
+		print("FORWARD DISABLE:")
+
+		while modules_list:
+
+			next_modules_list = []
+			for current_module in modules_list:
+				children_list = self.forward_links.get(current_module.key,None)
+				if children_list == None:
+					continue
+
+				for child in children_list:
+					child_module = self.modules[child]
+					next_modules_list.append(child_module)
+
+					if(child_module.enabled == True):
+						all_parents = self.backward_links[child]
+						disable = True
+						for parent in all_parents:
+							parent_module = self.modules[p]
+							if parent_module.enabled:
+								disable = False
+								break
+
+						if disable == True:
+							child_module.enabled = False
+							print("\t-" + child_module.get_name())
+
+			modules_list = next_modules_list
+						
+	def sync_config(self, abs_path_to_config_ini, override):
+		user_modules = self.configurator._sync_config(self, abs_path_to_config_ini, override)
+		if user_modules != None:
+			for _,m in self.modules.items():
+				me = user_modules.get(m.get_name(), None)
+				if me != None:
+					m.enabled = me
+
+
+
 	def print_info(self, print_key, print_sha, print_path, print_links):
 
 		for _,m in self.modules.items():
@@ -211,7 +262,7 @@ class ModuleGraph():
 			m = self._load_single_module(e);
 			if m != None:
 				confgure_queue.append(m)
-
+		self.age = self.age + 1
 		return confgure_queue
 
 	def configure(self, confgure_queue = None):
@@ -261,6 +312,8 @@ class ModuleGraph():
 
 				confgure_queue.append(nextmod)
 
+			self.age = self.age + 1
+
 		self.link_graph()
 
 		return self.configurator
@@ -278,242 +331,3 @@ class ModuleGraph():
 				self.leafs.append(k)
 
 	
-
-	#def construct_all(self, config):
-	#	result = []
-	#	for _, m in self.modules.items():
-	#		m.construct(config)
-	#		result.append(m)
-	#	return result
-
-#--------------------------------------------------------------------------------------------------------------------------------
-
-#def _parse_bool_value(sv):
-#	if sv in ["true", "on", "yes", "1"]:
-#		return True
-#	if sv in ["false", "off", "no", "0"]:
-#		return False
-#
-#	raise Exception("Invalid bool `" + str(sv) "`")
-#	
-#
-#def _load_ini_map(abs_path_to_ini):
-#	if not os.path.exists(abs_path_to_ini):
-#		return {}, {}
-#
-#	import configparser
-#	config = configparser.ConfigParser(allow_no_value=True)
-#	config.optionxform=str #preserve case for keys
-#	
-#	f = open(abs_path_to_ini, "r")
-#
-#	config.read_string(f.read())
-#	f.close()
-#	
-#	options = {}
-#	components = {}
-#	for section in config:
-#		
-#		section_obj = config[section]
-#		for key in section_obj:
-#			kn = str(key).strip()
-#			sv = str(section_obj[key]).strip()
-#			if section == "OPTIONS":
-#				options[kn] = sv
-#			elif section == "COMPONENTS":
-#				components[kn] = _parse_bool_value(sv.lower())
-#
-#	return options, components
-#
-#
-#class OptionsBuilder():
-#	def __init__(self):
-#		#selected
-#		
-#
-#	def dirty(self):
-#		return self._dirty
-#
-#
-#
-#	def build(self, ini_config_path):
-#
-#		options, components = _load_ini_map(ini_config_path)
-#
-#		f = open(ini_config_path, "w")
-#		if f == None:
-#			raise Exception("Failed to create config at `" + str(ini_config_path) "`.")
-#
-#		f.write("[COMPONENTS]\n")
-#		components = self._process_components(f, components)
-#		f.write("[OPTIONS]\n")
-#		options = self._process_options(f, options)
-#
-#		f.close()
-#
-#
-#	def _process_components(self, fout, user_config_components):
-#
-#		all_components = self._all_components
-#
-#		result = {}
-#
-#		for o in all_components:
-#			ucv = user_config_components.get(o,None)
-#
-#			is_enabled = False
-#			if ucv != None:
-#				is_enabled = ucv
-#			elif o in self._enabled_components:
-#				is_enabled = True
-#
-#			result[o] = is_enabled
-#
-#			#write to config
-#			if is_enabled == True:
-#				fout.write(str(o) + " = 1\n")
-#			else:
-#				fout.write(str(o) + " = 0\n")
-#
-#		return result
-#
-#	def _process_options(self, fout, user_config_options):
-#		
-#		result = {}
-#		for o in self._str_keys:
-#			v = user_config_components.get(o,None)
-#
-#			restrictions = self._str_values.get(o, None)
-#			defaults = self._str_defaults.get(o, None)
-#
-#			outv = None
-#			if v != None:
-#				#defined by user:
-#				if restrictions != None:
-#					if not v in restrictions:
-#						raise Exception("Invalid option [" + k + "] with value `" + v + "`, expecting [" + ",".join(restrictions) + "].")
-#				
-#				outv = v
-#
-#		return result
-#
-#
-#
-#class ParsedOptions():
-#	def __init__(self):
-#		pass
-#
-#
-		#kv = self._options.get(k, None)
-		#if kv == None:
-		#	raise Exception("Missing option value [" + k + "] with value `" + v + "`, expecting [" + ",".join(possible_values) + "].")
-	    #
-        #
-		#return self._options[k]
-		
-
-	#def get_value_or_die(self, name):
-	#	v = self._options.get(name, None)
-	#	if v == None:
-	#		raise Exception("Missing option `" + name + "`")
-    #
-	#	return v
-
-
-	#def get(self, k, v = None):
-    #
-	#	#TODO: improve "options" functionality
-	#	# this is a hack
-    #
-	#	rvalue = self._options.get(k, None)
-    #
-    #
-	#	if v == None:
-	#		self._bool_options.add(k)
-	#	elif isinstance(v, list):
-	#		if rvalue != None:
-	#			if not rvalue in v:
-	#				raise Exception("Incompatible value `" + rvalue + "`, expecting [" + ",".join(v) + "].")
-    #
-	#		self._str_values[k] = self._str_values.get(k, set()).union(set(v))
-	#	elif isinstance(v, str):
-	#		self._str_values.setdefault(k, set()).add(v)
-    #
-	#	if rvalue == None:
-	#		#no assigned value, try to get a value
-	#		possible_values = self._str_values.get(k,None)
-	#		if possible_values != None:
-	#			for v in possible_values:
-	#				self._options[k] = v
-	#				return v
-    #
-	#		if k in self._bool_options:
-	#			#unless somone asigns a value to this, we consider that it is a bool option
-	#			return ""
-    #
-	#	return rvalue
-
-#	def add_ini_config(self, abs_path_to_ini):
-#		import configparser
-#		config = configparser.ConfigParser(allow_no_value=True)
-#		config.optionxform=str #preserve case for keys
-#		
-#		f = open(abs_path_to_ini, "r")
-#		config.read_string("[void]\n" + f.read())
-#		f.close()
-#		
-#		result = []
-#		for section in config:
-#			section_obj = config[section]
-#			for key in section_obj:
-#				kn = str(key).strip()
-#				sv = str(section_obj[key]).strip()
-#
-#				if sv == "":
-#					self._bool_options.add(kn)
-#				else:
-#					self._options[kn] = sv
-#
-#	def save_ini_config(self, abs_path_to_ini):
-#		fout = ""
-#
-#		all_options = sorted(set(
-#			[k for k,v in self._options.items()] + 
-#			[k for k,v in self._str_values.items()] +
-#			list(self._bool_options)
-#		))
-#
-#		for o in all_options:
-#			v = self._options.get(o,None)
-#
-#			if v == None and o in self._bool_options:
-#				fout = fout + "#" + o + "=\n"
-#				fout = fout + "\t#BOOL\n"
-#			elif v != None:
-#				possible_values = self._str_values.get(o,None)
-#				fout = fout + "" + o + "=" + str(v) + "\n"
-#
-#				if possible_values != None:
-#					possible_values = sorted(possible_values)
-#					fout = fout + "\t#options:" + ",".join(possible_values) + "\n"
-#			else:
-#				raise Exception("Internal error")
-#
-#		f = open(abs_path_to_ini, "w")
-#		f.write(fout)
-#		f.close()
-#
-#
-#	def collect(self, out):
-#		all_options = sorted(set(
-#			[k for k,v in self._options.items()] + 
-#			[k for k,v in self._str_values.items()] +
-#			list(self._bool_options)
-#		))
-#
-#		for o in all_options:
-#			v = self._options.get(o,None)
-#			if v == None and o in self._bool_options:
-#				out[o] = "" #no value
-#			elif v != None:
-#				out[o] = v

@@ -1,7 +1,7 @@
 
 import os
 import hashlib
-import json
+
 
 import package_utils
 
@@ -104,33 +104,29 @@ class PackageConstructor():
 
 		return apath, path_entry
 
+	def serialize(self, data):
+		props = {}
+		files = {}
+		folders = {}
 
-def save_json(c, abs_output_file):
-	props = {}
-	files = {}
-	folders = {}
+		for p,v in self._props.items():
+			props[c] = {
+				"data" : v.value,
+				"tags" : list(v.tags)
+			}
 
-	for p,v in c._props.items():
-		props[c] = {
-			"data" : v.value,
-			"tags" : list(v.tags)
-		}
+		for f in self._files:
+			e = self._paths[f]
+			files[f] = list(e.tags)
 
-	for f in c._files:
-		e = c._paths[f]
-		files[f] = list(e.tags)
+		for f in self._folders:
+			e = self._paths[f]
+			folders[f] = list(e.tags)
 
-	for f in c._folders:
-		e = c._paths[f]
-		folders[f] = list(e.tags)
+		data["files"] = files
+		data["folders"] = folders
+		data["props"] = props
 
-	j = {
-		"files" : files,
-		"folders" : folders,
-		"props" : props
-	}
 
-	with open(abs_output_file, "w") as outfile:
-		outfile.write(json.dumps(j, indent=4, sort_keys=True))
 
 

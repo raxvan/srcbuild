@@ -21,6 +21,10 @@ def _parse_key(name):
 def _path_to_modkey(abs_path_to_module):
 	return hashlib.sha256(abs_path_to_module.lower().encode('utf-8')).hexdigest()
 
+def save_json(j, abs_output_file):
+	import json
+	with open(abs_output_file, "w") as outfile:
+		outfile.write(json.dumps(j, indent=4, sort_keys=True))
 
 #--------------------------------------------------------------------------------------------------------------------------------	
 
@@ -123,3 +127,4 @@ class FolderEntry(PathEntry):
 #	return self.get_abs_path()
 
 #--------------------------------------------------------------------------------------------------------------------------------
+

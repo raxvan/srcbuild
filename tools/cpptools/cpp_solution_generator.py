@@ -5,6 +5,7 @@ import sys
 import package_graph
 import package_config
 import package_constructor
+import package_utils
 
 class Solution(package_graph.ModuleGraph):
 	def __init__(self, platform, builder, override_config):
@@ -27,25 +28,30 @@ class Solution(package_graph.ModuleGraph):
 		return cfg
 
 	def generate(self, path):
-		m = self.load_shallow([path])[0]
+		root_module = self.load_shallow([path])[0]
 
-		output = os.path.join(m.get_package_dir(),"..","build",self.builder + "-" + m.get_name().replace(".","_").replace("-","_").lower())
+		output = os.path.join(root_module.get_package_dir(),"..","build",self.builder + "-" + root_module.get_name().replace(".","_").replace("-","_").lower())
 		output = os.path.abspath(output)
 		metaout = os.path.join(output, "modules")
 		if not os.path.exists(metaout):
 			os.makedirs(metaout)
 		
 		cfg = self.configure()
-		package_config.sync_config(cfg, os.path.join(output, "config.ini"), self.override_config)
+
+		self.sync_config(os.path.join(output, "config.ini"), self.override_config)
+
+		self.forward_disable([root_module])
 
 		all_modules = self.modules
 
 		for mk, m in all_modules.items():
 			pc = self.create_constructor(m, cfg)
 
-			m.run_proc("construct", pc)
+			root_module.run_proc("construct", pc)
 
-			package_constructor.save_json(pc, os.path.join(metaout,m.get_name() + ".json"))
+			j = {}
+			pc.serialize(j)
+			package_utils.save_json(j, os.path.join(metaout,m.get_name() + ".json"))
 
 
 def generate_win_project(path, force):
