@@ -75,7 +75,6 @@ class Module():
 		self.enabled = True
 		self.configured = False
 
-
 		self._config_priority = 0
 		if hasattr(self.pipeline, 'priority'):
 			self._config_priority = self.pipeline.priority()

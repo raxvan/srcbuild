@@ -49,8 +49,12 @@ class PackageEntry():
 				self.tags = self.tags.union(utag)
 		return self
 
-	def query_tags(self, tags_set):
-		return set(tags_set).issubset(self.tags)
+	#def query_tags(self, tags_set):
+	#	return set(tags_set).issubset(self.tags)
+    #
+	#def check_subtags_set(self, tags_set):
+	#	return tags_set.issubset(self.tags)
+    #
 
 	def get_tags_str(self, suffix):
 		if self.tags:
@@ -63,6 +67,10 @@ class PathEntry(PackageEntry):
 	def __init__(self, path, tags):
 		PackageEntry.__init__(self, tags)
 		self.path = path
+
+
+	def get_path_relative_to(self, p):
+		return os.path.relpath(self.get_abs_path(),p)
 
 #--------------------------------------------------------------------------------------------------------------------------------
 

@@ -21,7 +21,7 @@ class UserOption(package_utils.PackageEntry):
 	def add_default_value(self, dv):
 		if self.defaults == None:
 			self.defaults = set()
-		
+
 		self.defaults.add(dv)
 
 	def get_value(self):
@@ -43,7 +43,7 @@ class UserOption(package_utils.PackageEntry):
 
 		return None
 
-	def accepts(self, value):
+	def allow_value(self, value):
 		if self.accepts == None:
 			return True
 
@@ -99,10 +99,10 @@ class Configurator():
 		except:
 			#AttributeError, in case it does not have configure confution, we carry on
 			pass
-		
+
 		module.configured = True
 		self.current_module = None
-		
+
 	def _link_path(self, abs_dep_path, tags):
 		modkey = package_utils._path_to_modkey(abs_dep_path)
 
@@ -126,7 +126,7 @@ class Configurator():
 
 		abs_dep_path = self.solver.resolve_abspath_or_die(self.current_module, value, tags)
 		return self._link_path(abs_dep_path, tags)
-		
+
 	def optional_link(self, child_info):
 		# links child to current module (parent) if module exists
 		tags, value = package_utils._parse_key(child_info)
@@ -134,37 +134,37 @@ class Configurator():
 		abs_dep_path = self.solver.try_resolve_path(self.current_module, value, tags)
 		if abs_dep_path != None:
 			return self._link_path(abs_dep_path, tags)
-			
+
 		return None
 
 	def option(self, k, default_value, possible_values = None):
 		tags, kv = package_utils._parse_key(k)
 		o = self._options.get(kv,None)
-    
+
 		if o == None:
 			o = UserOption(tags)
 			self._options[kv] = o
 		elif tags != None:
 			o.tag(tags)
-    
+
 		if possible_values != None:
 			o.add_accepted_values(possible_values)
-		
+
 		if default_value != None:
 			o.add_default_value(default_value)
 
 		return o
-    
+
 	def component(self, name, default_bool_value = None):
 		tags, value = package_utils._parse_key(name)
 		c = self._components.get(value,None)
-    
+
 		if c == None:
 			c = UserComponent(tags)
 			self._components[value] = c
 		elif tags != None:
 			c.tag(tags)
-    
+
 		if not (default_bool_value == None or default_bool_value == False or default_bool_value == True):
 			raise Exception("Expeting bool or None, got " + str(name) + ".")
 
@@ -193,7 +193,7 @@ class Configurator():
 				r = r + f"{cname} = 1\n"
 			else:
 				r = r + f"{cname} = 0\n"
-		
+
 		r = r + "[OPTIONS]\n"
 		for oname, ovalue in self._options.items():
 			c = ovalue.get_value()
@@ -263,7 +263,7 @@ def _parse_bool_value(sv):
 		return False
 
 	raise Exception("Invalid bool `" + str(sv) + "`")
-	
+
 def _load_ini_map(abs_path_to_ini, modules, components, options):
 	if not os.path.exists(abs_path_to_ini):
 		return False
@@ -271,16 +271,16 @@ def _load_ini_map(abs_path_to_ini, modules, components, options):
 	import configparser
 	config = configparser.ConfigParser(allow_no_value=True)
 	config.optionxform=str #preserve case for keys
-	
+
 	f = open(abs_path_to_ini, "r")
 	if f == None:
 		raise Exception(f"Failed to open file {abs_path_to_ini}")
 
 	config.read_string(f.read())
 	f.close()
-	
+
 	for section in config:
-		
+
 		section_obj = config[section]
 		for key in section_obj:
 			kn = str(key).strip()

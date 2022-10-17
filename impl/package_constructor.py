@@ -56,15 +56,12 @@ class PackageConstructor():
 
 	###############################################################################
 	# property setters
-	def assign(self, pkey, pvalue):
+	def assign(self, pkey, pvalue = None):
 		tags, key = package_utils._parse_key(pkey)
-
-		if pvalue == None:
-			raise Exception("Value can't be None")
 
 		prop_entry = self._props.get(key, None)
 		if prop_entry == None:
-			prop_entry = PeropertyEntry(pvalue, tags)
+			prop_entry = package_utils.PeropertyEntry(pvalue, tags)
 			self._props[key] = prop_entry
 			return prop_entry
 		elif tags != None:
@@ -86,10 +83,16 @@ class PackageConstructor():
 			prop = self.assign(pkey, c.get_value())
 			prop.join_tags(c.tags)
 			return prop
+		elif c.allow_value(pvalue) == True:
+			prop = self.assign(pkey, pvalue)
+			prop.join_tags(c.tags)
+			return prop
+		else:
+			raise Exception(f"Failed to create property {pkey}")
+
 
 
 	#internal
-
 	def _add_path(self, pvalue, constructor):
 		tags, value = package_utils._parse_key(pvalue)
 
@@ -104,13 +107,49 @@ class PackageConstructor():
 
 		return apath, path_entry
 
+	def query_paths(self, tags):
+		ts = set(tags)
+		result = []
+		for _,pe in self._paths.items():
+			if ts.issubset(pe.tags):
+				result.append(pe)
+
+		return result
+
+	def query_files(self, tags):
+		ts = set(tags)
+		result = []
+		for _,pe in self._paths.items():
+			if isinstance(pe, package_utils.FileEntry) and ts.issubset(pe.tags):
+				result.append(pe)
+
+		return result
+
+	def get_property_or_die(self, pk):
+		p = self._props.get(pk, None)
+		if p == None:
+			raise Exception(f"Could not find property {pk}")
+		return p
+
+	def query_props(self, tags):
+		ts = set(tags)
+		result = []
+		for _,pe in self._props.items():
+			if ts.issubset(pe.tags):
+				result.append(pe)
+
+		return result
+
+
+
+
 	def serialize(self, data):
 		props = {}
 		files = {}
 		folders = {}
 
 		for p,v in self._props.items():
-			props[c] = {
+			props[p] = {
 				"data" : v.value,
 				"tags" : list(v.tags)
 			}
