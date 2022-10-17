@@ -96,7 +96,7 @@ class PackageConstructor():
 	def _add_path(self, pvalue, constructor):
 		tags, value = package_utils._parse_key(pvalue)
 
-		apath = self._path_solver.resolve_abspath_or_die(self.current_module, value, tags)
+		apath = self._path_solver.resolve_abspath_or_die(self._module, value, tags)
 		
 		path_entry = self._paths.get(apath, None)
 		if path_entry == None:

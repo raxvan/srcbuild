@@ -26,13 +26,13 @@ class ModuleLocator():
 		pass
 
 	def resolve_path(self, current_module, path, tags):
-		if "abspath" in tags:
+		if tags != None and "abspath" in tags:
 			return path
 
 		return os.path.abspath(os.path.join(current_module._abs_pipeline_dir, path))
 
 	def try_resolve_path(self, current_module, path, tags):
-		if "abspath" in tags:
+		if tags != None and "abspath" in tags:
 			if os.path.exists(path):
 				return path
 
@@ -47,16 +47,17 @@ class ModuleLocator():
 		if p == None or os.path.exists(p) == False:
 			modpath = current_module._abs_pipeline_path
 			raise Exception(f"Could not find path {path} in module {modpath}")
-	
+
 		return p
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
-class Module():
+class Module(package_utils.PackageEntry):
 	def __init__(self, modkey, abs_pipeline_path, graph):
+		package_utils.PackageEntry.__init__(self)
 
 		p,s = _load_module(abs_pipeline_path, modkey)
-		
+
 		self.graph = graph
 		self.pipeline = p
 
@@ -91,12 +92,35 @@ class Module():
 
 		return dep
 
+	def _module_enabled(self, modkey):
+		cm = self.graph.modules.get(modkey, None)
+		if cm == None:
+			return False
+
+		if cm.enabled == False:
+			return False
+
+		return True
+
+	def _module_tags(self, modkey):
+		cm = self.graph.modules.get(modkey, None)
+		if cm == None:
+			return set()
+
+		return cm.tags
+
+
+
 	def get_name(self):
 		return self._name
 
 	def run_proc(self, procname, *args):
 		p = getattr(self.pipeline, procname)
-		return p(*args)
+		try:
+			return p(*args)
+		except:
+			print(f"Error executing {procname} in module {self._abs_pipeline_path} ")
+			raise
 
 	def get_package_dir(self):
 		return self._abs_pipeline_dir
@@ -217,7 +241,7 @@ class ModuleGraph():
 						all_parents = self.backward_links[child]
 						disable = True
 						for parent in all_parents:
-							parent_module = self.modules[p]
+							parent_module = self.modules[parent]
 							if parent_module.enabled:
 								disable = False
 								break

@@ -103,13 +103,16 @@ class Configurator():
 		module.configured = True
 		self.current_module = None
 
-	def _link_path(self, abs_dep_path, tags):
+	def _safe_modkey(self, abs_dep_path):
 		modkey = package_utils._path_to_modkey(abs_dep_path)
 
 		if (modkey == self.current_module.key):
 			#depends on itself ?
-			return
+			raise Exception("Recursive link.")
 
+		return modkey
+
+	def _link_path(self, modkey, abs_dep_path, tags):
 		self.current_dependency.append((self.current_module, modkey, abs_dep_path))
 		return self.current_module._link_child_module(modkey, tags, abs_dep_path);
 
@@ -120,22 +123,34 @@ class Configurator():
 	def disable(self):
 		self.current_module.enabled = False
 
+	def tag(self, tags):
+		self.current_module.tag(tags)
+
 	def link(self, child_info):
 		# links child to current module (parent)
 		tags, value = package_utils._parse_key(child_info)
-
 		abs_dep_path = self.solver.resolve_abspath_or_die(self.current_module, value, tags)
-		return self._link_path(abs_dep_path, tags)
+		modkey = self._safe_modkey(abs_dep_path)
+		return self._link_path(modkey, abs_dep_path, tags)
 
-	def optional_link(self, child_info):
+	def link_if_enabled(self, child_info):
 		# links child to current module (parent) if module exists
 		tags, value = package_utils._parse_key(child_info)
-
 		abs_dep_path = self.solver.try_resolve_path(self.current_module, value, tags)
-		if abs_dep_path != None:
-			return self._link_path(abs_dep_path, tags)
-
+		modkey = self._safe_modkey(abs_dep_path)
+		if self.graph._module_enabled(modkey):
+			return self._link_path(modkey, abs_dep_path, tags)
 		return None
+
+	def link_if_any_tag(self, child_info, child_tags):
+		# links child to current module (parent) if module exists
+		tags, value = package_utils._parse_key(child_info)
+		abs_dep_path = self.solver.try_resolve_path(self.current_module, value, tags)
+		modkey = self._safe_modkey(abs_dep_path)
+		if self.graph._module_tags(modkey).intersection(child_tags):
+			return self._link_path(modkey, abs_dep_path, tags)
+		return None
+
 
 	def option(self, k, default_value, possible_values = None):
 		tags, kv = package_utils._parse_key(k)
