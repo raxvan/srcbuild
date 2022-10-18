@@ -55,7 +55,7 @@ class Solution(package_graph.ModuleGraph):
 		all_modules = self.modules
 
 		for mk, m in all_modules.items():
-			m.content = self.create_constructor(m, cfg)
+			m.content = self.create_constructor(m)
 
 			m.content.config("platform")
 			m.content.config("builder")

@@ -84,23 +84,6 @@ class Module(package_utils.PackageEntry):
 		
 		return dep
 
-	#def _module_enabled(self, modkey):
-	#	cm = self.graph.modules.get(modkey, None)
-	#	if cm == None:
-	#		return False
-    #
-	#	if cm.enabled == False:
-	#		return False
-    #
-	#	return True
-    #
-	#def _module_tags(self, modkey):
-	#	cm = self.graph.modules.get(modkey, None)
-	#	if cm == None:
-	#		return set()
-    #
-	#	return cm.tags
-
 	def serialize(self, out):
 		out["name"] = self.get_name()
 
@@ -108,6 +91,7 @@ class Module(package_utils.PackageEntry):
 		out["configured"] = self.configured
 		out["key"] = self.key
 		out["sha"] = self.sha
+		out["tags"] = list(self.tags)
 
 		links = {}
 		for lk,ld in self.links.items():
@@ -116,8 +100,6 @@ class Module(package_utils.PackageEntry):
 				"tags" : list(ld.tags),
 			}
 		out["links"] = links
-
-
 
 	def get_name(self):
 		return self._name
@@ -160,7 +142,7 @@ class Module(package_utils.PackageEntry):
 class ModuleGraph():
 	def __init__(self):
 		self.modules = {} #modkey/Module
-		self.path_map = {} #abs_path/modkey
+		self.names = {} #module.get_name()/Module
 
 		self.age = 0
 
@@ -173,15 +155,19 @@ class ModuleGraph():
 		self.configurator = None
 		self.locator = None
 
+	def _create_new_module(self, modkey, abs_module_path):
+		module = self.create_and_validate_module(modkey, abs_module_path)
+		self.modules[modkey] = module
+		self.names[module.get_name()] = module
+		return module
+
 	def _create_link(self, parent_module, modkey, abs_module_path, tags):
 		link = parent_module._create_child_link(modkey, tags, abs_module_path)
 
 		chmod = self.modules.get(modkey, None)
 
 		if chmod == None:
-			chmod = self.create_and_validate_module(modkey, abs_module_path)
-			self.modules[modkey] = chmod
-			self.path_map[abs_module_path] = modkey
+			chmod = self._create_new_module(modkey, abs_module_path)
 
 		self.forward_links.setdefault(parent_module.key,[]).append(chmod.key)
 		self.backward_links.setdefault(chmod.key,[]).append(parent_module.key)
@@ -190,20 +176,17 @@ class ModuleGraph():
 
 		return link		
 
-	def get_module_with_path(self, p):
-		p = os.path.abspath(p)
-
-		mk = self.path_map.get(p,None)
-		if mk == None:
-			raise Exception(f"No module with path: {p}")
-
-		return self.modules[mk]
-
 	def get_module_with_key(self, k):
 		return self.modules.get(k,None)
 
 	def get_modules(self):
 		return [v for _,v in self.modules.items()]
+
+	def module_enabled(self, modname):
+		module = self.names.get(modname,None)
+		if module == None:
+			return False
+		return module.enabled
 
 	#################################################################################################
 	#overloadable
@@ -217,8 +200,8 @@ class ModuleGraph():
 	def create_configurator(self):
 		return package_config.Configurator(self.locator, self)
 
-	def create_constructor(self, target_module, config):
-		return package_constructor.PackageConstructor(self.locator, target_module, config)
+	def create_constructor(self, target_module):
+		return package_constructor.PackageConstructor(self, target_module)
 
 
 	def create_and_validate_module(self, modkey, modpath):
@@ -300,26 +283,10 @@ class ModuleGraph():
 		for e in entrypoints:
 			modpath = os.path.abspath(e)
 			modkey = package_utils._path_to_modkey(modpath)
-			chmod = self.create_and_validate_module(modkey, modpath)
-			self.modules[modkey] = chmod
-			self.path_map[modpath] = modkey
+			chmod = self._create_new_module(modkey, modpath)
 			result.append(chmod)
 
-		module_stack = result
-		
-		while len(module_stack) > 0:
-
-			first_module = module_stack[0]
-			remaning_modules = module_stack[1:]
-
-			if first_module.configured:
-				module_stack = remaning_modules
-				continue
-
-			print("\t"  + ":" + first_module.get_name())
-			loaded_links = self.configurator._configure_module(first_module)
-			
-			module_stack = loaded_links + module_stack
+			self.configurator._configure_module_recursive(chmod)
 
 		self.link_graph()
 

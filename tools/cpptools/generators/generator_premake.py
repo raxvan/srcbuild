@@ -79,7 +79,7 @@ def _get_premake_builder_arg():
 	#"vs2017"
 	#"vs2015"
 	#"gmake"
-	return "vs2019"
+	return "vs2022"
 
 
 

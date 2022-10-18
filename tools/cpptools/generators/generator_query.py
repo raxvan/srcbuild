@@ -17,7 +17,7 @@ def get_dependency_list(solution, pack, visited, scan_private):
 
 		#if d.content.get_property_or_die("type") == "view":
 		#	continue
-		if not scan_private and _dependency_metadata.query_tags(["private"]):
+		if not scan_private and "private" in _dependency_metadata.tags:
 			continue
 
 		next_queue.append(_dependency)
@@ -58,18 +58,13 @@ def join_prop_values(result, pl):
 	for k,v in pl:
 		result[k] = v.value
 
-def join_prop_keys(result, pl):
-	for k,v in pl:
-		result.append(k)
+#def join_prop_keys(result, pl):
+#	for k,v in pl:
+#		result.append(k)
 
 def query_defines(solution, root_project):
 
 	result = {}
-
-	#global defines:
-	#for _, p in solution.items():
-	#	join_prop_values(result, p.content.query_props(["define", "global"]))
-
 
 	visited_projects = set()
 	query_queue = [root_project]

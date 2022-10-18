@@ -80,6 +80,15 @@ class ModuleLink(PathEntry):
 
 		self.module = None
 
+	def enable(self):
+		self.module.enabled = True
+
+	def disable(self):
+		self.module.enabled = False
+
+	def enabled(self):
+		return self.module.enabled;
+
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class PeropertyEntry(PackageEntry):

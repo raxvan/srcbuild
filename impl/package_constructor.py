@@ -6,11 +6,12 @@ import hashlib
 import package_utils
 
 class PackageConstructor():
-	def __init__(self, solver, module, config):
+	def __init__(self, graph, module):
 		
-		self._path_solver = solver
+		self._graph = graph
 		self._module = module
-		self._config = config
+		self._solver = graph.locator
+		self._config = graph.configurator
 
 		self._props = {}
 		self._paths = {}
@@ -44,7 +45,7 @@ class PackageConstructor():
 	def fscan(self, fpath):
 		tags, value = package_utils._parse_key(fpath)
 
-		apath = self._path_solver.resolve_abspath_or_die(self._module, value, tags)
+		apath = self._solver.resolve_abspath_or_die(self._module, value, tags)
 
 		for root, dirnames, filenames in os.walk(apath):
 			for f in filenames:
@@ -52,6 +53,9 @@ class PackageConstructor():
 				path_entry = package_utils.FileEntry(abs_item_path, tags)
 				self._paths[abs_item_path] = path_entry
 				self._files.append(abs_item_path)
+
+	def module_enabled(self, modname):
+		return self._graph.module_enabled(modname)
 
 
 	###############################################################################
@@ -96,7 +100,7 @@ class PackageConstructor():
 	def _add_path(self, pvalue, constructor):
 		tags, value = package_utils._parse_key(pvalue)
 
-		apath = self._path_solver.resolve_abspath_or_die(self._module, value, tags)
+		apath = self._solver.resolve_abspath_or_die(self._module, value, tags)
 		
 		path_entry = self._paths.get(apath, None)
 		if path_entry == None:
@@ -134,9 +138,9 @@ class PackageConstructor():
 	def query_props(self, tags):
 		ts = set(tags)
 		result = []
-		for _,pe in self._props.items():
+		for pk,pe in self._props.items():
 			if ts.issubset(pe.tags):
-				result.append(pe)
+				result.append((pk,pe))
 
 		return result
 
