@@ -25,7 +25,7 @@ def main_info(args):
 		print("-CONFIG:")
 		print(package_config.get_config_ini(cfg))
 
-def main_cmake(args):
+def main_solution(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
 	sys.path.append(os.path.join(_this_dir,"tools","cpptools"))
 
@@ -43,8 +43,8 @@ def main(args):
 	if acc == "info":
 		main_info(args)
 
-	elif acc == "cmake":
-		main_cmake(args)	
+	elif acc == "solution":
+		main_solution(args)
 
 
 if __name__ == '__main__':
@@ -70,12 +70,12 @@ if __name__ == '__main__':
 	#list_parser = subparsers.add_parser('list', description='Lists package information.')
 	#list_parser.set_defaults(action='list')
 	
-	make_parser = subparsers.add_parser('cmake', description='Generate c++ solutions.')
-	make_parser.set_defaults(action='cmake')
-	make_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate solution")
-	make_parser.add_argument('target', choices=['win', 'linux'], help='Path to root module')
-	make_parser.add_argument('path', help='Path to root module')
-	make_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+	solution_parser = subparsers.add_parser('solution', description='Generate c++ solutions.')
+	solution_parser.set_defaults(action='solution')
+	solution_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate solution")
+	solution_parser.add_argument('target', choices=['win', 'linux'], help='Path to root module')
+	solution_parser.add_argument('path', help='Path to root module')
+	solution_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
 	args = parser.parse_args(user_arguments)
 	main(args)
