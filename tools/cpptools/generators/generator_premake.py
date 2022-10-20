@@ -73,14 +73,11 @@ def _get_premake_os_arg():
 	#"linux"
 	return "windows"
 
-def _get_premake_builder_arg():
-	#"vs2019" #latest
+def _get_premake_builder_arg(config):
 	#"vs2019"
 	#"vs2017"
 	#"vs2015"
-	#"gmake"
-	return "vs2019"
-
+	return config.query_option_value("default-visual-studio")
 
 
 ##################################################################################################################################
@@ -151,7 +148,7 @@ class PremakeContext():
 
 		#actually generate the solution
 		premake_os = _get_premake_os_arg()
-		premake_builder = _get_premake_builder_arg()
+		premake_builder = _get_premake_builder_arg(self.config)
 
 		output = subprocess.run([os.getenv("PREMAKE5_EXE",None),"--verbose","--os=" + premake_os,"--file=" + premake_path, premake_builder])
 		return output

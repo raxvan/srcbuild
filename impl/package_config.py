@@ -110,6 +110,12 @@ class Configurator():
 
 		return modkey
 
+	def query_option_value(self, name):
+		v = self._options.get(name)
+		if v == None:
+			raise Exception(f"Could not find option {name}")
+		return v.get_value()
+
 	#api
 	def enable(self):
 		self.active_module.enabled = True

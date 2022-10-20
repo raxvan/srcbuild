@@ -31,6 +31,8 @@ class Solution(package_graph.ModuleGraph):
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
 
+		cfg.option("default-visual-studio","vs2022",["vs2015","vs2017", "vs2019", "vs2022"])
+
 		return cfg
 
 	def create_module(self, modkey, modpath):
