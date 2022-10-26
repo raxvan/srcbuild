@@ -17,13 +17,22 @@ def main_info(args):
 
 	mg = package_graph.ModuleGraph()
 
-	cfg = mg.configure([path])
+	cfg, packs = mg.configure([path])
 
-	mg.print_info(args.pkey, args.psha, args.ppath, args.links)
+	print("INFO:")
+
+	mg.print_info(args.pkey, args.psha, args.ppath)
+	if args.link_tree == True:
+		print("LINKS:")
+		mg.print_links()
+	elif args.links == True:
+		print("LINKS:")
+		mg.print_links_shallow()
+
 
 	if cfg != None:
 		print("-CONFIG:")
-		print(package_config.get_config_ini(cfg))
+		print(cfg._get_config_ini(mg))
 
 def main_solution(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +73,7 @@ if __name__ == '__main__':
 	info_parser.add_argument('-s', '--sha', dest='psha', action='store_true', help="Print module sha.")
 	info_parser.add_argument('-p', '--path', dest='ppath', action='store_true', help="Print module absolute path.")
 	info_parser.add_argument('-l', '--links', dest='links', action='store_true', help="Print Links.")
+	info_parser.add_argument('-rl', '--rlinks', dest='link_tree', action='store_true', help="Print Links recursive.")
 	info_parser.add_argument('path', help='Path to module to inspect')
 	info_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 

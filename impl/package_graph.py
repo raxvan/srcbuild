@@ -115,7 +115,7 @@ class Module(package_utils.PackageEntry):
 	def get_package_dir(self):
 		return self._abs_pipeline_dir
 
-	def print_info(self, print_key, print_sha, print_path, print_links):
+	def print_info(self, print_key, print_sha, print_path):
 		m = "- "
 		m = m + str(self._name).ljust(16)
 		if print_key == True:
@@ -125,16 +125,42 @@ class Module(package_utils.PackageEntry):
 		if print_path == True:
 			m = m + " path:" + self._abs_pipeline_path
 
-		if print_links == True:
-			m = m + " links:\n"
+		print(m)
+
+	def print_links_recursive(self, depth):
+		m = "\t" * depth + "-" + str(self._name)
+
+		if self.links:
+			m = m + " [" + str(len(self.links.items())) + "]\n"
+			for l,lm in self.links.items():
+				mod = self.graph.modules.get(l, None)
+				if mod == None:
+					m = m + "\t" * depth + l + lm.get_tags_str(" ") +  "\n"
+				else:
+					m = m + mod.print_links_recursive(depth + 1)
+		else:
+			m = m + " [none]\n"
+
+		return m
+
+	def print_links(self):
+		m = self.print_links_recursive(0)
+		print(m)
+
+	def print_links_shallow(self):
+		m = str(self._name) + " links:"
+		if self.links:
+			m = m + "[" + str(len(self.links.items())) + "]\n"
 			for l,lm in self.links.items():
 				mod = self.graph.modules.get(l, None)
 				if mod == None:
 					m = m + "\t" + l + lm.get_tags_str(" ") +  "\n"
 				else:
 					m = m + "\t" + mod.get_name() + lm.get_tags_str(" ") + "\n"
+		else:
+			m = m + "None!"
 
-		print(m)
+		print (m)
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -143,8 +169,6 @@ class ModuleGraph():
 	def __init__(self):
 		self.modules = {} #modkey/Module
 		self.names = {} #module.get_name()/Module
-
-		self.age = 0
 
 		self.forward_links = {} #modkey:parent -> modkey:children []
 		self.backward_links = {} #modkey:child -> modkey:parents []
@@ -174,7 +198,7 @@ class ModuleGraph():
 
 		link.module = chmod
 
-		return link		
+		return link
 
 	def get_module_with_key(self, k):
 		return self.modules.get(k,None)
@@ -260,13 +284,21 @@ class ModuleGraph():
 
 
 
-	def print_info(self, print_key, print_sha, print_path, print_links):
+	def print_info(self, print_key, print_sha, print_path):
 
 		for _,m in self.modules.items():
-			m.print_info(print_key, print_sha, print_path, print_links)
+			m.print_info(print_key, print_sha, print_path)
 
-		print("roots: " + str(self.roots))
-		print("leafs: " + str(self.leafs))
+		#print("roots: " + str(self.roots))
+		#print("leafs: " + str(self.leafs))
+
+	def print_links_shallow(self):
+		for _,m in self.modules.items():
+			m.print_links_shallow()
+	def print_links(self):
+		for _,m in self.modules.items():
+			m.print_links()
+
 
 	def configure(self, entrypoints):
 		
