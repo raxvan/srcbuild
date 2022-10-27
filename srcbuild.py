@@ -46,6 +46,7 @@ def main_solution(args):
 
 	cpp_solution_generator.create_solution(path, target, force)
 
+
 def main(args):
 
 	acc = args.action

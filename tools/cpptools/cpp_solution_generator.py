@@ -56,6 +56,8 @@ class Solution(package_graph.ModuleGraph):
 
 		all_modules = self.modules
 
+		assets_ini = {}
+
 		for mk, m in all_modules.items():
 			m.content = self.create_constructor(m)
 
@@ -71,12 +73,21 @@ class Solution(package_graph.ModuleGraph):
 
 			construct_proc(m.content)
 
+			assets = list(set([p.path for p in m.content.query_files(["asset"])]))
+			for a in assets:
+				h,t = os.path.split(a)
+				if t in assets_ini:
+					raise Exception("Duplicate asset foud: " + a)
+				assets_ini[t] = a
+
 			#save json
 			j = {}
 			m.serialize(j)
 			m.content.serialize(j)
 			package_utils.save_json(j, os.path.join(metaout,m.get_name() + ".json"))
 
+		if assets_ini:
+			package_utils.save_ini(assets_ini, os.path.join(output,"assets"))
 
 		return (root_module.get_name(), output, cfg)
 
@@ -85,6 +96,7 @@ def generate_win_project(path, force):
 	path = os.path.abspath(path)
 
 	mg = Solution("win32","msvc", force)
+
 	solution_name, out_dir, config = mg.generate(path)
 
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -95,10 +107,14 @@ def generate_win_project(path, force):
 	g = generator_premake.PremakeContext(os.path.join(_this_dir,"templates"), mg, config)
 	g.run(solution_name, out_dir)
 
+	return mg
+
 
 
 def create_solution(path, target, force):
 	if target == "win":
-		generate_win_project(path, force)
+		return generate_win_project(path, force)
+
+	return None
 
 

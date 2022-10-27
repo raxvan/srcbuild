@@ -26,6 +26,11 @@ def save_json(j, abs_output_file):
 	with open(abs_output_file, "w") as outfile:
 		outfile.write(json.dumps(j, indent=4, sort_keys=True))
 
+def save_ini(data, abs_output_file):
+	with open(abs_output_file, "w") as outfile:
+		for k,v in data.items():
+			outfile.write(k + "=" + str(v) + "\n")
+
 #--------------------------------------------------------------------------------------------------------------------------------	
 
 class PackageEntry():

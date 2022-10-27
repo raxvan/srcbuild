@@ -1,7 +1,7 @@
 
 import os
 import hashlib
-
+import os, fnmatch
 
 import package_utils
 
@@ -42,13 +42,16 @@ class PackageConstructor():
 
 		return entry
 
-	def fscan(self, fpath):
+	def fscan(self, fpath, file_filter = None):
 		tags, value = package_utils._parse_key(fpath)
 
 		apath = self._solver.resolve_abspath_or_die(self._module, value, tags)
 
 		for root, dirnames, filenames in os.walk(apath):
 			for f in filenames:
+				if file_filter != None:
+					if fnmatch.filter(f, file_filter):
+						continue;
 				abs_item_path = os.path.join(root, f)
 				path_entry = package_utils.FileEntry(abs_item_path, tags)
 				self._paths[abs_item_path] = path_entry
