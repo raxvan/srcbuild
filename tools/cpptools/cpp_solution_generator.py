@@ -87,7 +87,7 @@ class Solution(package_graph.ModuleGraph):
 			package_utils.save_json(j, os.path.join(metaout,m.get_name() + ".json"))
 
 		if assets_ini:
-			package_utils.save_ini(assets_ini, os.path.join(output,"assets"))
+			package_utils.save_assets_ini(assets_ini, output)
 
 		return (root_module.get_name(), output, cfg)
 

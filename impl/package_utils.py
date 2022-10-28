@@ -26,10 +26,10 @@ def save_json(j, abs_output_file):
 	with open(abs_output_file, "w") as outfile:
 		outfile.write(json.dumps(j, indent=4, sort_keys=True))
 
-def save_ini(data, abs_output_file):
-	with open(abs_output_file, "w") as outfile:
+def save_assets_ini(data, abs_folder_location):
+	with open(os.path.join(abs_folder_location,"assets"), "w") as outfile:
 		for k,v in data.items():
-			outfile.write(k + "=" + str(v) + "\n")
+			outfile.write(k + "=" + str(os.path.relpath(v, abs_folder_location)) + "\n")
 
 #--------------------------------------------------------------------------------------------------------------------------------	
 
