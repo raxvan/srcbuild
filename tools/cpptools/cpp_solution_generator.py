@@ -27,7 +27,7 @@ class Solution(package_graph.ModuleGraph):
 
 		cfg.option("platform",self.platform,["win32"])
 		cfg.option("builder",self.builder,["msvc","make"])
-		cfg.option("cppstd","17",["11","14","17","20"])
+		cfg.option("cppstd","20",["11","14","17","20"])
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
 
