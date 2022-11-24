@@ -83,7 +83,7 @@ class ModuleLink(PathEntry):
 	def __init__(self, abspath, tags):
 		PathEntry.__init__(self, abspath, tags)
 
-		self.module = None
+		self.module = None #module instance
 
 	def enable(self):
 		self.module.enabled = True
