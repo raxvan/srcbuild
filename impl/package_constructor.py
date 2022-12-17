@@ -35,7 +35,7 @@ class PackageConstructor():
 	def file(self, fpath):
 		apath, entry = self._add_path(fpath, package_utils.FileEntry)
 
-		if os.path.isdir(apath) == False:
+		if os.path.isfile(apath) == False:
 			raise Exception(f"Expected file at {apath}")
 
 		self._files.append(apath)
