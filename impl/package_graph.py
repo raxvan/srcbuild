@@ -85,13 +85,14 @@ class Module(package_utils.PackageEntry):
 		return dep
 
 	def serialize(self, out):
-		out["name"] = self.get_name()
+		modinfo = {}
+		modinfo["name"] = self.get_name()
 
-		out["enabled"] = self.enabled
-		out["configured"] = self.configured
-		out["key"] = self.key
-		out["sha"] = self.sha
-		out["tags"] = list(self.tags)
+		modinfo["enabled"] = self.enabled
+		modinfo["configured"] = self.configured
+		modinfo["key"] = self.key
+		modinfo["sha"] = self.sha
+		modinfo["tags"] = list(self.tags)
 
 		links = {}
 		for lk,ld in self.links.items():
@@ -99,7 +100,9 @@ class Module(package_utils.PackageEntry):
 				"path" : ld.path,
 				"tags" : list(ld.tags),
 			}
-		out["links"] = links
+		modinfo["links"] = links
+
+		out["module"] = modinfo
 
 	def get_name(self):
 		return self._name
@@ -127,38 +130,49 @@ class Module(package_utils.PackageEntry):
 
 		print(m)
 
-	def print_links_recursive(self, depth):
-		m = "\t" * depth + "-" + str(self._name)
+
+	def print_links_recursive(self, pidx, depth):
+		h = None
+		if pidx != None:
+			h = str(pidx) + ":"
+		else:
+			h = ">"
+
+		m = "\t" * depth + h + str(self._name)
 
 		if self.links:
-			m = m + " [" + str(len(self.links.items())) + "]\n"
+			m = m + " [" + str(len(self.links.items())) + "] ->\n"
+			index = 0
 			for l,lm in self.links.items():
 				mod = self.graph.modules.get(l, None)
 				if mod == None:
-					m = m + "\t" * depth + l + lm.get_tags_str(" ") +  "\n"
+					m = m + "\t" * depth + str(index) + ":" + l + lm.get_tags_str(" ") +  "\n"
 				else:
-					m = m + mod.print_links_recursive(depth + 1)
+					m = m + mod.print_links_recursive(index, depth + 1)
+				index = index + 1
 		else:
-			m = m + " [none]\n"
+			m = m + " [0]\n"
 
 		return m
 
 	def print_links(self):
-		m = self.print_links_recursive(0)
+		m = self.print_links_recursive(None, 0)
 		print(m)
 
 	def print_links_shallow(self):
-		m = str(self._name) + " links:"
+		m = str(self._name)
 		if self.links:
-			m = m + "[" + str(len(self.links.items())) + "]\n"
+			m = m + " [" + str(len(self.links.items())) + "] ->\n"
+			index = 0
 			for l,lm in self.links.items():
 				mod = self.graph.modules.get(l, None)
 				if mod == None:
-					m = m + "\t" + l + lm.get_tags_str(" ") +  "\n"
+					m = m + "\t" + str(index) + ":" + l + lm.get_tags_str(" ") +  "\n"
 				else:
-					m = m + "\t" + mod.get_name() + lm.get_tags_str(" ") + "\n"
+					m = m + "\t" + str(index) + ":" + mod.get_name() + lm.get_tags_str(" ") + "\n"
+				index = index + 1
 		else:
-			m = m + "None!"
+			m = m + " [0] *"
 
 		print (m)
 
@@ -242,10 +256,8 @@ class ModuleGraph():
 
 	#################################################################################################
 	#utils:
-
 	def forward_disable(self, modules_list):
-		
-		print("FORWARD DISABLE:")
+		package_utils.display_status("RUNNING FORWARD DISABLE...")
 
 		while modules_list:
 
@@ -273,7 +285,7 @@ class ModuleGraph():
 							print("\t-" + child_module.get_name())
 
 			modules_list = next_modules_list
-						
+
 	def sync_config(self, abs_path_to_config_ini, override):
 		user_modules = self.configurator._sync_config(self, abs_path_to_config_ini, override)
 		if user_modules != None:
@@ -308,7 +320,8 @@ class ModuleGraph():
 		if self.configurator == None:
 			self.configurator = self.create_configurator()
 
-		print("CONFIGURING...")
+
+		package_utils.display_status("CONFIGURING...")
 
 		result = []
 

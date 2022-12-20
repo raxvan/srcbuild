@@ -10,6 +10,7 @@ sys.path.append(os.path.join(_this_dir,"tools","pytools"))
 
 import package_graph
 import package_config
+import package_utils
 
 def main_info(args):
 	path = os.path.abspath(args.path)
@@ -17,9 +18,13 @@ def main_info(args):
 
 	mg = package_graph.ModuleGraph()
 
-	cfg, packs = mg.configure([path])
+	cfg, root_modules = mg.configure([path])
 
-	print("INFO:")
+	mg.forward_disable(root_modules)
+
+	package_utils.display_status("DONE.")
+
+	print("\nMODULES:")
 
 	mg.print_info(args.pkey, args.psha, args.ppath)
 	if args.link_tree == True:

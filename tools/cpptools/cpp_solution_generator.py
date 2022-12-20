@@ -58,6 +58,8 @@ class Solution(package_graph.ModuleGraph):
 
 		assets_ini = {}
 
+		package_utils.display_status("GENERATING...")
+
 		for mk, m in all_modules.items():
 			m.content = self.create_constructor(m)
 

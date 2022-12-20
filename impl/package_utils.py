@@ -31,7 +31,7 @@ def save_assets_ini(data, abs_folder_location):
 		for k,v in data.items():
 			outfile.write(k + "=" + str(os.path.relpath(v, abs_folder_location)) + "\n")
 
-#--------------------------------------------------------------------------------------------------------------------------------	
+#--------------------------------------------------------------------------------------------------------------------------------
 
 class PackageEntry():
 	def __init__(self, utag = None):
@@ -114,41 +114,7 @@ class FolderEntry(PathEntry):
 		PathEntry.__init__(self, path, tags)
 
 #--------------------------------------------------------------------------------------------------------------------------------
-
-#class PathEntry(PackageEntry):
-#	def __init__(self, ctx, rel_path, tags):
-#		PackageEntry.__init__(self, tags)
-#
-#		#self.context = ctx
-#		self.path = rel_path
-#
-#		self.filename = None
-#		self.cached_abs_path = None
-#		self.cache_dir_path = None
-#
-#def get_abs_path(self):
-#	if self.cached_abs_path == None:
-#		self.cached_abs_path = self.context.resolve_abspath(self.path, self.tags)
-#	return self.cached_abs_path
-
-#def get_context_path(self):
-#	#returns path relative to current context
-#	return os.path.relpath(self.get_abs_path(),self.context.get_package_dir())
-
-#def get_filename(self):
-#	if self.filename != None:
-#		return self.filename;
-#
-#	self.cache_dir_path, self.filename = os.path.split(self.get_abs_path())
-#
-#	return self.filename
-#
-#def get_package_name(self):
-#	f = self.get_filename()
-#	return f.replace(".pak.py","")
-#
-#def get_uuid(self):
-#	return self.get_abs_path()
-
 #--------------------------------------------------------------------------------------------------------------------------------
 
+def display_status(step_msg):
+	print("-" * 32 + "\n" + step_msg)

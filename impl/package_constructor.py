@@ -7,7 +7,6 @@ import package_utils
 
 class PackageConstructor():
 	def __init__(self, graph, module):
-		
 		self._graph = graph
 		self._module = module
 		self._solver = graph.locator
@@ -147,9 +146,6 @@ class PackageConstructor():
 
 		return result
 
-
-
-
 	def serialize(self, data):
 		props = {}
 		files = {}
@@ -169,9 +165,11 @@ class PackageConstructor():
 			e = self._paths[f]
 			folders[f] = list(e.tags)
 
-		data["files"] = files
-		data["folders"] = folders
-		data["props"] = props
+		data["content"] = {
+			"files" : files,
+			"folders" : folders,
+			"props" : props,
+		}
 
 
 

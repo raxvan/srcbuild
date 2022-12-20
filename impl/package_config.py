@@ -61,6 +61,7 @@ class UserOption(package_utils.PackageEntry):
 
 		return True
 
+#--------------------------------------------------------------------------------------------------------------------------------
 
 class UserComponent(package_utils.PackageEntry):
 	def __init__(self, tags):
