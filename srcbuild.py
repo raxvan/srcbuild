@@ -89,7 +89,7 @@ if __name__ == '__main__':
 	solution_parser = subparsers.add_parser('solution', description='Generate c++ solutions.')
 	solution_parser.set_defaults(action='solution')
 	solution_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate solution")
-	solution_parser.add_argument('target', choices=['win', 'linux'], help='Path to root module')
+	solution_parser.add_argument('target', choices=['win', 'cmake'], help='Path to root module')
 	solution_parser.add_argument('path', help='Path to root module')
 	solution_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 

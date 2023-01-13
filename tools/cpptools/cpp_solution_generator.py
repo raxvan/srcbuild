@@ -26,7 +26,7 @@ class Solution(package_graph.ModuleGraph):
 		cfg = package_graph.ModuleGraph.create_configurator(self)
 
 		cfg.option("platform",self.platform,["win32"])
-		cfg.option("builder",self.builder,["msvc","make"])
+		cfg.option("builder",self.builder,["msvc","cmake"])
 		cfg.option("cppstd","20",["11","14","17","20"])
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
@@ -111,11 +111,30 @@ def generate_win_project(path, force):
 
 	return mg
 
+def generate_cmake_project(path, force):
+	path = os.path.abspath(path)
+
+	mg = Solution("win32","cmake", force)
+
+	solution_name, out_dir, config = mg.generate(path)
+
+	_this_dir = os.path.dirname(os.path.abspath(__file__))
+	sys.path.append(os.path.join(_this_dir,"generators"))
+
+	import generator_cmake
+
+	g = generator_cmake.CmakeContext(os.path.join(_this_dir,"templates"), mg, config)
+	g.run(solution_name, out_dir)
+
+	return mg
+
 
 
 def create_solution(path, target, force):
 	if target == "win":
 		return generate_win_project(path, force)
+	elif target == "cmake":
+		return generate_cmake_project(path, force)
 
 	return None
 

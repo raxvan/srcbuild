@@ -29,11 +29,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		"$<$<CONFIG:Release>:-Ofast>"
 	)
 
-	if(__FULL_WARNINGS__) # full warnings ? YES/NO
+	if(__FULL_WARNINGS__)
+		# full warnings, w4, warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wall" "-Wextra" "-Werror")
-	elseif (__DISABLE_WARNINGS__) # disable warnings ? YES/NO
+	elseif (__DISABLE_WARNINGS__)
+		# warnings disabled
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wno-everything")
 	else()
+		# warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-Werror")
 	endif()
 
@@ -47,11 +50,14 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		"$<$<CONFIG:Release>:-Ofast>"
 	)
 
-	if(__FULL_WARNINGS__) # full warnings ? YES/NO
+	if(__FULL_WARNINGS__)
+		# full warnings, w4, warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wall" "-Wextra" "-Werror")
-	elseif (__DISABLE_WARNINGS__) # disable warnings ? YES/NO
+	elseif (__DISABLE_WARNINGS__)
+		# warnings disabled
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-w")
 	else()
+		# warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-Werror")
 	endif()
 
@@ -62,11 +68,14 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		#"/Zc:preprocessor"
 	)
 
-	if(__FULL_WARNINGS__) # full warnings ? YES/NO
+	if(__FULL_WARNINGS__)
+		# full warnings, w4, warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "/W4" "/WX")
-	elseif (__DISABLE_WARNINGS__) # disable warnings ? YES/NO
+	elseif (__DISABLE_WARNINGS__)
+		# warnings disabled
 		list(APPEND CUSTOM_COMPILE_OPTIONS "/W")
 	else()
+		# warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "/WX")
 	endif()
 
@@ -78,7 +87,7 @@ endif()
 
 if(__THREADS__) # using threads ? YES/NO
 	if(MSVC)
-		#empty
+		#left empty
 	else()
 		find_package (Threads)
 		list(APPEND CUSTOM_LINK_OPTIONS ${CMAKE_THREAD_LIBS_INIT})

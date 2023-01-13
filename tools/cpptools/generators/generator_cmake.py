@@ -1,52 +1,39 @@
 
 import os
 import sys
-
 import shutil
 import shell_utils
 import generator_query
 
 _this_dir = os.path.dirname(os.path.abspath(__file__))
 
-cmake_workspace = shell_utils.read_text_file(os.path.join(_this_dir,"..","templates","cmake_workspace_template.txt"))
-cmake_project = shell_utils.read_text_file(os.path.join(_this_dir,"..","templates","cmake_project_template.txt"))
+##################################################################################################################################
 
-files_to_copy = {
-	"_generate_vs.bat" : os.path.join(_this_dir,"..","templates","cmake_generate_vs.bat"),
-	"build.sh" : os.path.join(_this_dir,"..","templates","cmake_build.sh"),
-	"clean.sh" : os.path.join(_this_dir,"..","templates","cmake_clean.sh"),
-}
+def _get_cpp_standard(item):
+	cpp_standards_map = {
+		"11" : "11",
+		"14" : "14",
+		"17" : "17",
+		"20" : "20",
+	}
+	return cpp_standards_map[item.content.get_property_or_die("cppstd").value]
 
-cmake_add_type = {
-	"exe" : "add_executable",
-	"lib" : "add_library",
-
-	"dll" : "add_library",
-	"view" : "add_library",
-}
-cmake_add_type_data = {
-	"exe" : "",
-	"lib" : "STATIC",
-
-	"dll" : "SHARED",
-	"view" : "STATIC",
-}
 
 def _get_project_name(item):
 	fixed_name = item.get_name()
 
-	if item.content.get_property_or_die("type") == "exe":
+	if item.content.get_property_or_die("type").value == "exe":
 		fixed_name = "_" + fixed_name
 
 	return fixed_name
 
-def _update_warnings(replacemap,item):
+def _update_warnings(replacemap, item):
 	warnings_map = {
 		"off" : "NO",
 		"default" : "YES",
 		"full" : "YES",
 	}
-	w = item.content.get_property_or_die("warnings")
+	w = item.content.get_property_or_die("warnings").value
 	if w == "off":
 		replacemap["__FULL_WARNINGS__"] = "NO"
 		replacemap["__DISABLE_WARNINGS__"] = "YES"
@@ -56,73 +43,106 @@ def _update_warnings(replacemap,item):
 	elif w == "full":
 		replacemap["__FULL_WARNINGS__"] = "YES"
 		replacemap["__DISABLE_WARNINGS__"] = "NO"
-	
 
-def _get_cpp_standard(item):
-	return item.options.get_value_or_die("cppstd")
+
+cmake_add_type = {
+	"exe" : "add_executable",
+	"lib" : "add_library",
+
+	"dll" : "add_library",
+	"view" : "message",
+}
+cmake_add_type_data = {
+	"exe" : "",
+	"lib" : "STATIC",
+
+	"dll" : "SHARED",
+	"view" : "STATIC",
+}
 
 ##################################################################################################################################
 
-def generate_cmakelists(projects_graph, target_build_folder, item):
-	all_includes = generator_query.query_include_paths(projects_graph, item)
-	all_sources = generator_query.query_sources(projects_graph, item)
-	all_defines = generator_query.query_defines(projects_graph, item)
-	all_links = generator_query.query_libs(projects_graph, item)
+class CmakeContext():
+	def __init__(self, template_folder, solution, config):
 
-	mrp = generator_query.make_relative_path
+		self.cmake_workspace = shell_utils.read_text_file(os.path.join(template_folder,"cmake_workspace_template.txt"))
+		self.cmake_project_template = shell_utils.read_text_file(os.path.join(template_folder,"cmake_project_template.txt"))
+		fc = [
+			"cmake_clean.sh",
+			"cmake_build.sh",
+			"cmake_generate_make.sh",
+			"cmake_generate_vs2019.bat",
+		]
+		self.files_to_copy = { x : os.path.join(template_folder, x) for x in fc }
 
-	itype = item.content.get_property_or_die("type")
-	name = _get_project_name(item)
 
-	replacemap = {
-		"__NAME__" : name,
-		"__INCL__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + mrp(d, target_build_folder) for d in all_includes]),
-		"__SRC__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + mrp(d, target_build_folder) for d in all_sources]),
-		"__DEF__" : "\n\t".join(all_defines),
-		"__LINKS__" : "\n\t".join(all_links),
-		"__ADD_TYPE__" : cmake_add_type[itype],
-		"__ADD_TYPE_DATA__" : cmake_add_type_data[itype],
-		"__STANDARD__" : _get_cpp_standard(item),
-		"__THREADS__" : "YES"
-	}
-	_update_warnings(replacemap,item)
+		self.solution = solution
+		self.config = config
 
-	cmakelists_dir = os.path.join(target_build_folder,"projects",name)
-	if not os.path.exists(cmakelists_dir):
-		os.makedirs(cmakelists_dir)
-	cmakelists_file = os.path.join(cmakelists_dir,"CMakeLists.txt")
-	f = open(cmakelists_file,"w")
+	def generate_header(self, solution_name):
+		sname = "_" + solution_name.replace("-","_")
+		return self.cmake_workspace.replace("__SOLUTION_NAME__",sname) + "\n"
 
-	proj_data = cmake_project
-	for word, value in replacemap.items():
-		proj_data = proj_data.replace(word, value)
-	proj_data = "\n" + proj_data + "\n"
-	f.write(proj_data)
+	def generate_project_str(self, replmap):
+		proj_data = self.cmake_project_template
+		for word, value in replmap.items():
+			proj_data = proj_data.replace(word, value)
+		return proj_data + "\n"
 
-	f.close();
+	def generate_project_file(self, target_build_folder, item):
 
-def append_project_to_file(solution_file, projects_graph, target_build_folder, item):
-	generate_cmakelists(projects_graph, target_build_folder, item);
-	solution_file.write("add_subdirectory(projects/" + _get_project_name(item) + ")\n")
+		all_includes = generator_query.query_include_paths(self.solution, item)
+		all_sources = generator_query.query_sources(self.solution, item)
+		all_defines = generator_query.query_defines(self.solution, item)
+		all_links = generator_query.query_libs(self.solution, item)
+		extra_links = generator_query.query_extra_libs(self.solution, item) #TODO
 
-def generate_header(solution_name):
-	sname = "_" + solution_name.replace("-","_")
-	return cmake_workspace.replace("__SOLUTION_NAME__",sname)
+		mrp = generator_query.make_relative_path
 
-def run(projects_graph, solution_name, options, output_dir):
+		itype = item.content.get_property_or_die("type").value
+		name =  _get_project_name(item)
+		replacemap = {
+			"__NAME__" : name,
+			"__INCL__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + mrp(d, target_build_folder) for d in all_includes]),
+			"__SRC__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + mrp(d, target_build_folder) for d in all_sources]),
+			"__DEF__" : "\n\t".join(all_defines),
+			"__LINKS__" : "\n\t".join(all_links),
+			"__ADD_TYPE__" : cmake_add_type[itype],
+			"__ADD_TYPE_DATA__" : cmake_add_type_data[itype],
+			"__STANDARD__" : _get_cpp_standard(item),
+			"__THREADS__" : "YES"
+		}
 
-	cmake_path = os.path.join(output_dir,"CMakeLists.txt")
-	f = open(cmake_path,"w")
+		_update_warnings(replacemap, item);
 
-	header = generate_header(solution_name)
-	f.write(header)
+		cmakelists_dir = os.path.join(target_build_folder,"projects", name)
+		if not os.path.exists(cmakelists_dir):
+			os.makedirs(cmakelists_dir)
 
-	for _,v in projects_graph.items():
-		append_project_to_file(f, projects_graph, output_dir, v)
+		cmakelists_file = os.path.join(cmakelists_dir, "CMakeLists.txt")
+		print(cmakelists_file)
+		f = open(cmakelists_file,"w")
+		f.write(self.generate_project_str(replacemap))
+		f.close();
 
-	f.close()
+	def run(self, solution_name, output_dir):
 
-	#generate other files
-	for k,v in files_to_copy.items():
-		output_path = os.path.join(output_dir,k)
-		shutil.copyfile(v,output_path)
+		premake_path = os.path.join(output_dir,"CMakeLists.txt")
+		tout = open(premake_path,"w")
+
+		#solution entry
+		header = self.generate_header(solution_name)
+		tout.write(header)
+
+		#projects:
+		for m in self.solution.get_modules():
+			self.generate_project_file(output_dir, m)
+			tout.write("add_subdirectory(projects/" + _get_project_name(m) + ")\n")
+
+		tout.close()
+
+		for k,v in self.files_to_copy.items():
+			output_path = os.path.join(output_dir, k)
+			shutil.copyfile(v,output_path)
+
+		print(premake_path)
