@@ -209,7 +209,6 @@ class Configurator():
 
 		return c
 
-
 	def _get_config_ini(self, graph):
 		r = ""
 

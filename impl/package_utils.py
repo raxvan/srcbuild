@@ -24,7 +24,7 @@ def _path_to_modkey(abs_path_to_module):
 def save_json(j, abs_output_file):
 	import json
 	with open(abs_output_file, "w") as outfile:
-		outfile.write(json.dumps(j, indent=4, sort_keys=True))
+		outfile.write(json.dumps(j, indent=1, sort_keys=True))
 
 def save_assets_ini(data, abs_folder_location):
 	with open(os.path.join(abs_folder_location,"assets"), "w") as outfile:
@@ -33,16 +33,19 @@ def save_assets_ini(data, abs_folder_location):
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
+def make_tags(utag):
+	if utag != None:
+		if isinstance(utag, str):
+			return set([utag])
+		elif isinstance(utag, list):
+			return set(utag)
+		elif isinstance(utag, set):
+			return utag
+	return set()
+
 class PackageEntry():
 	def __init__(self, utag = None):
-		if utag == None:
-			self.tags = set()
-		elif isinstance(utag, str):
-			self.tags = set([utag])
-		elif isinstance(utag, list):
-			self.tags = set(utag)
-		elif isinstance(utag, set):
-			self.tags = utag
+		self.tags = make_tags(utag)
 
 	def join_tags(self, utag):
 		if utag != None:
@@ -56,10 +59,10 @@ class PackageEntry():
 
 	#def query_tags(self, tags_set):
 	#	return set(tags_set).issubset(self.tags)
-    #
+	#
 	#def check_subtags_set(self, tags_set):
 	#	return tags_set.issubset(self.tags)
-    #
+	#
 
 	def get_tags_str(self, suffix):
 		if self.tags:
@@ -116,5 +119,49 @@ class FolderEntry(PathEntry):
 #--------------------------------------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------------------------------
 
+
+class Colors:
+	""" ANSI color codes """
+	BLACK = "\033[0;30m"
+	RED = "\033[0;31m"
+	GREEN = "\033[0;32m"
+	BROWN = "\033[0;33m"
+	BLUE = "\033[0;34m"
+	PURPLE = "\033[0;35m"
+	CYAN = "\033[0;36m"
+	LIGHT_GRAY = "\033[0;37m"
+	DARK_GRAY = "\033[1;30m"
+	LIGHT_RED = "\033[1;31m"
+	LIGHT_GREEN = "\033[1;32m"
+	YELLOW = "\033[1;33m"
+	LIGHT_BLUE = "\033[1;34m"
+	LIGHT_PURPLE = "\033[1;35m"
+	LIGHT_CYAN = "\033[1;36m"
+	LIGHT_WHITE = "\033[1;37m"
+	BOLD = "\033[1m"
+	FAINT = "\033[2m"
+	ITALIC = "\033[3m"
+	UNDERLINE = "\033[4m"
+	BLINK = "\033[5m"
+	NEGATIVE = "\033[7m"
+	CROSSED = "\033[9m"
+	END = "\033[0m"
+	# cancel SGR codes if we don't write to a terminal
+	if not __import__("sys").stdout.isatty():
+		for _ in dir():
+			if isinstance(_, str) and _[0] != "_":
+				locals()[_] = ""
+	else:
+		# set Windows console in VT mode
+		if __import__("platform").system() == "Windows":
+			kernel32 = __import__("ctypes").windll.kernel32
+			kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+			del kernel32
+
+
 def display_status(step_msg):
-	print("-" * 32 + "\n" + step_msg)
+	print(Colors.DARK_GRAY + "-" * 32 + "\n" + Colors.LIGHT_GRAY + step_msg + Colors.END)
+
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------

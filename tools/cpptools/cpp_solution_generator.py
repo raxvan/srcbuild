@@ -71,7 +71,7 @@ class Solution(package_graph.ModuleGraph):
 
 			construct_proc = m.get_proc("construct")
 			if construct_proc == None:
-				raise Exception(f"Could not find construct in {m.get_name()}")
+				raise Exception(f"Could not find 'construct' function in {m.get_name()}")
 
 			construct_proc(m.content)
 
@@ -86,7 +86,7 @@ class Solution(package_graph.ModuleGraph):
 			j = {}
 			m.serialize(j)
 			m.content.serialize(j)
-			package_utils.save_json(j, os.path.join(metaout,m.get_name() + ".json"))
+			package_utils.save_json(j, os.path.join(metaout, m.get_name() + ".json"))
 
 		if assets_ini:
 			package_utils.save_assets_ini(assets_ini, output)

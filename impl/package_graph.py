@@ -73,7 +73,7 @@ class Module(package_utils.PackageEntry):
 		#^ children
 
 		self.enabled = True
-		self.configured = False
+		self.configured = False #set to true when package is configured
 
 	def _create_child_link(self, modkey, tags, abs_dep_path):
 		if modkey in self.links:
@@ -257,6 +257,7 @@ class ModuleGraph():
 	#################################################################################################
 	#utils:
 	def forward_disable(self, modules_list):
+		
 		package_utils.display_status("RUNNING FORWARD DISABLE...")
 
 		while modules_list:

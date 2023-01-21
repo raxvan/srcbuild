@@ -51,22 +51,29 @@ def main_solution(args):
 
 	cpp_solution_generator.create_solution(path, target, force)
 
+def main_run(args):
+	_this_dir = os.path.dirname(os.path.abspath(__file__))
+	sys.path.append(os.path.join(_this_dir,"tools","pipelinetools"))
+
+	import pipeline_executor
+	pipeline_executor.run_pipeline(args.path, args.reconfigure)
+
 
 def main(args):
 
 	acc = args.action
+
 	if acc == "info":
 		main_info(args)
 
 	elif acc == "solution":
 		main_solution(args)
 
+	elif acc == "run":
+		main_run(args);
+
 
 if __name__ == '__main__':
-
-	#pack_database = sys.argv[1]
-	#workspace = sys.argv[2]
-
 	user_arguments = sys.argv[1:]
 
 	parser = argparse.ArgumentParser()
@@ -93,7 +100,17 @@ if __name__ == '__main__':
 	solution_parser.add_argument('path', help='Path to root module')
 	solution_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
+	run_parser = subparsers.add_parser('run', description='Run tasks')
+	run_parser.set_defaults(action='run')
+	run_parser.add_argument('-r', '--reconfigure', dest='reconfigure', action='store_true', help="Reconfigure.")
+	run_parser.add_argument('path', help='Path to root module')
+	#run_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+
+
 	args = parser.parse_args(user_arguments)
-	main(args)
-
-
+	if hasattr(args, 'action'):
+		main(args)
+	else:
+		print("Missing operation:")
+		for k,_ in subparsers.choices.items():
+			print("\t-> " + k)

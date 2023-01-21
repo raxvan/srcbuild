@@ -31,6 +31,13 @@ class PackageConstructor():
 
 		return entry
 
+	def newfolder(self, fpath):
+		apath, entry = self._add_new_folder(fpath)
+		if not os.path.exists(apath):
+			os.makedirs(apath)
+		self._folders.append(apath)
+		return entry
+
 	def file(self, fpath):
 		apath, entry = self._add_path(fpath, package_utils.FileEntry)
 
@@ -58,6 +65,15 @@ class PackageConstructor():
 
 	def module_enabled(self, modname):
 		return self._graph.module_enabled(modname)
+
+
+	def get_child(self, modname):
+		module = self._graph.names.get(modname,None)
+		if module == None:
+			return None
+		if module.key in self._module.links:
+			return module
+		return None
 
 
 	###############################################################################
@@ -96,14 +112,8 @@ class PackageConstructor():
 		else:
 			raise Exception(f"Failed to create property {pkey}")
 
-
-
 	#internal
-	def _add_path(self, pvalue, constructor):
-		tags, value = package_utils._parse_key(pvalue)
-
-		apath = self._solver.resolve_abspath_or_die(self._module, value, tags)
-		
+	def _add_path_internal(self, apath, constructor, tags):
 		path_entry = self._paths.get(apath, None)
 		if path_entry == None:
 			path_entry = constructor(apath, tags)
@@ -113,8 +123,23 @@ class PackageConstructor():
 
 		return apath, path_entry
 
+	def _add_loaded_path(self, abspath, constructor, tags):
+		apath = self._solver.resolve_abspath_or_die(self._module, abspath, "abspath")
+		return self._add_path_internal(apath, constructor, tags)
+		
+	def _add_path(self, pvalue, constructor):
+		tags, value = package_utils._parse_key(pvalue)
+
+		apath = self._solver.resolve_abspath_or_die(self._module, value, tags)
+		return self._add_path_internal(apath, constructor, tags)
+
+	def _add_new_folder(self, pvalue):
+		tags, value = package_utils._parse_key(pvalue)
+		apath = self._solver.resolve_path(self._module, value, tags)
+		return self._add_path_internal(apath, package_utils.FolderEntry, tags)
+
 	def query_paths(self, tags):
-		ts = set(tags)
+		ts = package_utils.make_tags(tags)
 		result = []
 		for _,pe in self._paths.items():
 			if ts.issubset(pe.tags):
@@ -123,7 +148,7 @@ class PackageConstructor():
 		return result
 
 	def query_files(self, tags):
-		ts = set(tags)
+		ts = package_utils.make_tags(tags)
 		result = []
 		for _,pe in self._paths.items():
 			if isinstance(pe, package_utils.FileEntry) and ts.issubset(pe.tags):
@@ -138,7 +163,7 @@ class PackageConstructor():
 		return p
 
 	def query_props(self, tags):
-		ts = set(tags)
+		ts = package_utils.make_tags(tags)
 		result = []
 		for pk,pe in self._props.items():
 			if ts.issubset(pe.tags):
@@ -154,16 +179,16 @@ class PackageConstructor():
 		for p,v in self._props.items():
 			props[p] = {
 				"data" : v.value,
-				"tags" : list(v.tags)
+				"tags" : sorted(list(v.tags))
 			}
 
 		for f in self._files:
 			e = self._paths[f]
-			files[f] = list(e.tags)
+			files[f] = sorted(list(e.tags))
 
 		for f in self._folders:
 			e = self._paths[f]
-			folders[f] = list(e.tags)
+			folders[f] = sorted(list(e.tags))
 
 		data["content"] = {
 			"files" : files,
@@ -171,6 +196,21 @@ class PackageConstructor():
 			"props" : props,
 		}
 
+	def deserialize(self, data):
+		content = data['content']
+		props = content['props']
+		files = content['files']
+		folders = content['folders']
 
+		for k, v in props.items():
+			prop_entry = package_utils.PeropertyEntry(v['data'], v['tags'])
+			self._props[k] = prop_entry
 
+		for k, v in files.items():
+			apath, entry = self._add_path_internal(k, package_utils.FileEntry, v)
+			self._files.append(apath)
+
+		for k, v in folders.items():
+			apath, entry = self._add_path_internal(k, package_utils.FolderEntry, v)
+			self._folders.append(apath)
 
