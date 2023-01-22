@@ -44,7 +44,7 @@ class Solution(package_graph.ModuleGraph):
 
 		root_module = root_modules[0]
 
-		output = os.path.join(root_module.get_package_dir(),"build",self.builder + "-" + root_module.get_name().replace(".","_").replace("-","_").lower())
+		output = os.path.join(root_module.get_package_dir(),"build",self.builder + "-" + root_module.get_simplified_name())
 		output = os.path.abspath(output)
 		metaout = os.path.join(output, "modules")
 		if not os.path.exists(metaout):

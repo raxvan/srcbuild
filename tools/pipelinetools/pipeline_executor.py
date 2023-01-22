@@ -9,8 +9,7 @@ import package_constructor
 import package_utils
 
 import pipeline_utils
-
-import hashlib
+import pipeline_constructor
 
 
 _citalic = package_utils.Colors.ITALIC
@@ -35,66 +34,6 @@ class PipelineModule(package_graph.Module):
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
-class PipelineConstructor(package_constructor.PackageConstructor):
-	def __init__(self, graph, target_module):
-		package_constructor.PackageConstructor.__init__(self, graph, target_module)
-		self.builder_names = []
-
-	def builder(self, name, func):
-		self._graph.add_builder(self._module, name, func)
-
-		self.builder_names.append(name)
-
-	def run(self, build_name, **kwargs):
-		return self._graph.run_builder(build_name)
-
-	def serialize(self, data):
-		package_constructor.PackageConstructor.serialize(self,data)
-		data['builders'] = sorted(self.builder_names)
-
-	def _get_exec_file(self, path_to_file):
-		script = None
-
-		if isinstance(path_to_file, str):
-			script = self.file(path_to_file)
-		elif isinstance(path_to_file, package_utils.FileEntry):
-			script = path_to_file
-			self._paths[path_to_file.path] = path_to_file
-			self._files.append(path_to_file.path)
-		else:
-			raise Exception("Invalid script...")
-
-		return script
-
-	def _run_command_sync(self, cmd):
-		joined_cmd = " ".join(cmd)
-		hcmd = hashlib.sha256(joined_cmd.encode("utf-8") ).hexdigest()
-		self.assign(hcmd, cmd)
-
-		import subprocess
-		result = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-		self.assign(hcmd + "-returncode", result.returncode)
-		
-		log = f"CMD:\n{joined_cmd}"
-		log = log + "\nSTDOUT:\n" + result.stdout.decode("utf-8")
-		log = log + "\nSTDERR:\n" + result.stderr.decode("utf-8")
-		logloc = self._graph.push_log_file(hcmd, log)
-		if(result.returncode != 0):
-			raise Exception("exec_shell_sync failed, check " + logloc)
-
-	def exec_shell_sync(self, script_info, args = []):
-		script = self._get_exec_file(script_info)
-		cmd = ["/bin/bash", script.path] + args
-		self._run_command_sync(cmd)
-
-	def exec_binary_sync(self, executable_info, args = []):
-		exe = self._get_exec_file(executable_info)
-		cmd = [exe.path] + args
-		self._run_command_sync(cmd)
-
-
-#--------------------------------------------------------------------------------------------------------------------------------
-
 class PipelineBuilder():
 	def __init__(self, name, module, func):
 		self.name = name
@@ -103,6 +42,20 @@ class PipelineBuilder():
 
 	def get_full_name(self):
 		return self.module.get_name() + "." + self.name
+
+class BuilderInstance():
+	def __init__(self):
+		self.builder_name = None
+		self.instance_name = None
+		self.data = None
+		self.content = None
+		self.future = None
+
+	def get_content():
+		return self.content
+
+	def get_result(self):
+		return self.future
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -116,9 +69,12 @@ class Solution(package_graph.ModuleGraph):
 
 		self.reconfigure = reconfigure
 
-		self.pipeline_dirname = None
-		self.output = None
-		self.logsdir = None
+		self.pipeline_dirname = None #short name for pipeline output
+		self.output = None #output dir
+		self.logsdir = None #log output dir
+		self.modulesdir = None
+		self.submodulesdir = None
+		self.version = 0
 
 	def add_builder(self, module, name, func):
 		check = self.builders.get(name, None)
@@ -146,7 +102,7 @@ class Solution(package_graph.ModuleGraph):
 		return PipelineModule(modkey, modpath, self)
 
 	def create_constructor(self, target_module):
-		return PipelineConstructor(self, target_module)
+		return pipeline_constructor.Pipeline(self, target_module)
 
 	def get_next_modules(self, modkey, module):
 		parents = self.backward_links.get(modkey, None)
@@ -179,11 +135,11 @@ class Solution(package_graph.ModuleGraph):
 		return hc
 
 
-	def check_for_changes(self, module, data):
+	def check_for_changes_in_database(self, module, data):
 
 		modinfo = data.get('module', None)			
 
-		if (module == None):
+		if (modinfo == None):
 			return [f"{_cred}'module' seems to be missing ...{_cend}"]
 
 		if module.sha != modinfo.get('sha',None):
@@ -225,73 +181,135 @@ class Solution(package_graph.ModuleGraph):
 
 		return r		
 
-	def execute_module_constructor(self,metaout, mk, m):
-		desc_path = os.path.join(metaout,m.get_name() + ".json")
+	def check_changes_with_file(self, base_module, display_name, desc_path):
 
-		reason = None
+		display_name = f"{_clightblue}[{_cyellow}" + display_name + f"{_clightblue}]{_cend}"
 
-		display_name = f"{_clightblue}[{_cyellow}" + m.get_name() + f"{_clightblue}]{_cend}"
+		if (not os.path.exists(desc_path)):
+			return None, display_name + f"{_cbrown} + {desc_path} does not exist.{_cend}"
+		
+		data = pipeline_utils.read_json(desc_path)
+		if (data == None):
+			return None, display_name + f"{_cbrown} + {desc_path} could not be opened.{_cend}"
 
-		while True:
-			if (not os.path.exists(desc_path)):
-				reason = f"{_cbrown} + {desc_path} does not exist.{_cend}"
-				break;
-			
-			data = pipeline_utils.read_json(desc_path)
-			if (data == None):
-				reason = f"{_cbrown} + {desc_path} could not be opened.{_cend}"
-				break
+		bver = data.get('version', None)
+		if bver != self.version:
+			bver = str(bver)
+			return None, display_name + f"{_cyellow} + {desc_path} was built with an older version {bver}.{_cend}"
 
-			changes = self.check_for_changes(m, data)
-			if isinstance(changes, str):
-				reason = changes
-				break
-			elif isinstance(changes, list) and changes:
-				reason = f"{_cbrown} * detected changes:{_cend}"
-				for c in changes:
-					reason = reason + "\n\t" + c
-				break
+		changes = self.check_for_changes_in_database(base_module, data)
+		if isinstance(changes, str):
+			return None, display_name + changes
+		elif isinstance(changes, list) and changes:
+			reason = display_name + f"{_cbrown} * detected changes:{_cend}"
+			for c in changes:
+				reason = reason + "\n\t" + c
+			return None, reason
 
-			print(display_name + f"{_cgreen} Nothing to do.{_cend}")
+		builders = data.get("builders", None)
+		if builders != None:
+			reason = None
+			for b in builders:
+				func = base_module.get_proc(b)
+				if func == None:
+					reason = f"{_cred} ! Builder {b} could not be found...{_cend}"
+					break;
+			if reason != None:
+				return None, display_name + reason
+			for b in builders:
+				self.add_builder(base_module, b, base_module.get_proc(b))
+
+		return data, display_name + f"{_cgreen} Nothing to do.{_cend}"
+
+	def save_json(self, result, module, content, desc_path):
+		j = {
+			"version" : self.version,
+			"result" : result,
+		}
+		module.serialize(j)
+		content.serialize(j)
+		package_utils.save_json(j, desc_path)
+
+		files = j['content']['files']
+		for k, v in files.items():
+			self.get_file_hash(k)
+
+	def execute_module_constructor(self, mk, m):
+		desc_path = os.path.join(self.modulesdir, m.get_name() + ".json")
+
+		content, message = self.check_changes_with_file(m, m.get_name(), desc_path)
+
+		if content != None:
+			print(message)
 
 			m.content = self.create_constructor(m)
-			m.content.deserialize(data)
+			m.content.deserialize(content)
 
-			break
-
-		if(reason != None):
-			print(display_name + reason)
+		elif message != None:
+			print(message)
 
 			m.content = self.create_constructor(m)
 			m.content.config("nocache")
 			construct_proc = m.get_proc("construct")
 			if construct_proc == None:
 				raise Exception(f"Could not find 'construct' function in {m.get_name()}")
-			construct_proc(m.content)
+			result = construct_proc(m.content)
 
 			#save json
-			j = {}
-			m.serialize(j)
-			m.content.serialize(j)
-			package_utils.save_json(j, desc_path)
+			self.save_json(result, m, m.content, desc_path)
 
-			files = j['content']['files']
-			for k, v in files.items():
-				self.get_file_hash(k)
+	def spawn_builder(self, basemodule, builder_name, data):
+		
+		builder = self.builders.get(builder_name, None)
+		if (builder == None):
+			raise Exception(f"Could not find builder '{builder_name}'")
+
+		instance_name = basemodule.get_simplified_name() + "." + pipeline_utils.kwargskey(data)
+		desc_path = os.path.join(self.submodulesdir, instance_name + ".json")
+		content, message = self.check_changes_with_file(builder.module, instance_name, desc_path)
+
+		r = BuilderInstance()
+		r.builder_name = builder_name;
+		r.instance_name = instance_name
+		r.data = data
+
+		if content != None:
+			print(message)
+			r.content = self.create_constructor(builder.module)
+			r.content.deserialize(content)
+			r.future = content.get("result", None)
+
+		elif message != None:
+			print(message)
+
+			r.content = self.create_constructor(basemodule)
+			r.content.config("nocache")
+			
+			result = builder.func(r.content, **data)
+			r.future = result
+
+			self.save_json(result, builder.module, r.content, desc_path)
+
+		return r
+
 
 	def execute(self, path):
 		cfg, root_modules = self.configure([path])
 
 		root_module = root_modules[0]
 
-		self.pipeline_dirname = os.path.join("pipeline",root_module.get_name().replace(".","_").replace("-","_").lower())
+		self.pipeline_dirname = os.path.join("pipeline",root_module.get_simplified_name())
 		self.output = os.path.join(root_module.get_package_dir(), self.pipeline_dirname)
 		self.output = os.path.abspath(self.output)
 		self.logsdir = os.path.join(self.output, "logs")
 
-		metaout = os.path.join(self.output, "modules")
-		if not os.path.exists(metaout):
-			os.makedirs(metaout)
+		self.modulesdir = os.path.join(self.output, "modules")
+		self.submodulesdir = os.path.join(self.output, "submodules")
+
+		if not os.path.exists(self.modulesdir):
+			os.makedirs(self.modulesdir)
+		if not os.path.exists(self.submodulesdir):
+			os.makedirs(self.submodulesdir)
 		if not os.path.exists(self.logsdir):
 			os.makedirs(self.logsdir)
 
@@ -312,7 +330,7 @@ class Solution(package_graph.ModuleGraph):
 			mk = modstack.pop()
 			m = self.modules[mk]
 
-			self.execute_module_constructor(metaout, mk, m)
+			self.execute_module_constructor(mk, m)
 
 			modstack.extend(self.get_next_modules(mk, m))
 

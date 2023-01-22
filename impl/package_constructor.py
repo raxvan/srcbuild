@@ -53,19 +53,27 @@ class PackageConstructor():
 
 		apath = self._solver.resolve_abspath_or_die(self._module, value, tags)
 
+		r = []
+
 		for root, dirnames, filenames in os.walk(apath):
 			for f in filenames:
 				if file_filter != None:
-					if fnmatch.filter(f, file_filter):
+					if not fnmatch.fnmatch(f, file_filter):
 						continue;
 				abs_item_path = os.path.join(root, f)
 				path_entry = package_utils.FileEntry(abs_item_path, tags)
 				self._paths[abs_item_path] = path_entry
 				self._files.append(abs_item_path)
+				r.append(path_entry)
+
+		return r
 
 	def module_enabled(self, modname):
 		return self._graph.module_enabled(modname)
 
+
+	def module(self, modname):
+		return self._graph.get_module(modname)
 
 	def get_child(self, modname):
 		module = self._graph.names.get(modname,None)
@@ -119,7 +127,7 @@ class PackageConstructor():
 			path_entry = constructor(apath, tags)
 			self._paths[apath] = path_entry
 		elif tags != None:
-			path_entry.tag(tags)
+			path_entry.join_tags(tags)
 
 		return apath, path_entry
 

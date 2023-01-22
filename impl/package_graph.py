@@ -68,6 +68,7 @@ class Module(package_utils.PackageEntry):
 		self._abs_pipeline_dir, self._pipeline_filename = os.path.split(abs_pipeline_path)
 
 		self._name = self._pipeline_filename.replace(".pak.py","")
+		self._simplified_name = self._name.replace(".","_").replace("-","_").lower()
 
 		self.links = {} #key==modkey, value==ModuleLink
 		#^ children
@@ -106,6 +107,9 @@ class Module(package_utils.PackageEntry):
 
 	def get_name(self):
 		return self._name
+		
+	def get_simplified_name(self):
+		return self._simplified_name
 
 	def get_proc(self, procname):
 		try:
@@ -225,6 +229,9 @@ class ModuleGraph():
 		if module == None:
 			return False
 		return module.enabled
+
+	def get_module(self, modname):
+		return self.names.get(modname,None)
 
 	#################################################################################################
 	#overloadable
