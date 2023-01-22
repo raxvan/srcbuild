@@ -298,7 +298,7 @@ class Solution(package_graph.ModuleGraph):
 
 		root_module = root_modules[0]
 
-		self.pipeline_dirname = os.path.join("pipeline",root_module.get_simplified_name())
+		self.pipeline_dirname = os.path.join(".pipeline",root_module.get_simplified_name())
 		self.output = os.path.join(root_module.get_package_dir(), self.pipeline_dirname)
 		self.output = os.path.abspath(self.output)
 		self.logsdir = os.path.join(self.output, "logs")
@@ -336,7 +336,21 @@ class Solution(package_graph.ModuleGraph):
 
 		self.hashes.update(self.hachcache)
 		package_utils.save_json(self.hashes, hashes_file)
-		
+
+		#check if all modules are built
+		error = []
+		for k,v in self.modules.items():
+			if m.enabled and m.exec_count != len(m.links):
+				error.append(v.get_name())
+
+		if error:
+			msg = _cred + "ERROR: Detected modules that are not constructed:" + _cend
+			for e in error:
+				msg = msg + "\n\t" + _cbold + e + _cend
+			msg = msg + _cred + "\n(´。＿。｀)" + _cend + "\n"
+			print(msg)
+		else:
+			print(_cgreen + "\nDONE!" + _cwhite + " ☜(ﾟヮﾟ☜)\n" + _cend)
 
 
 def run_pipeline(path, reconfigure):
