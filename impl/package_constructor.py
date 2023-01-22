@@ -71,7 +71,6 @@ class PackageConstructor():
 	def module_enabled(self, modname):
 		return self._graph.module_enabled(modname)
 
-
 	def module(self, modname):
 		return self._graph.get_module(modname)
 
@@ -119,6 +118,13 @@ class PackageConstructor():
 			return prop
 		else:
 			raise Exception(f"Failed to create property {pkey}")
+
+	def get_config(self, pkey):
+		c = self._config._options.get(pkey, None)
+		if c == None:
+			raise Exception(f"No configuratin found with name {pkey}")
+		return c.get_value()
+
 
 	#internal
 	def _add_path_internal(self, apath, constructor, tags):
