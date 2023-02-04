@@ -43,11 +43,24 @@ class PipelineConstructor(package_constructor.PackageConstructor):
 			else:
 				raise Exception("Unknown type:" + str(a))
 
+	def dirty(self, *args):
+		for a in args:
+			if isinstance(a, package_utils.FileEntry):
+				self._set_dirty(a.path)
+			elif isinstance(a, str):
+				self._set_dirty(a)
+			else:
+				raise Exception("Unknown type:" + str(a))
+
+	def _set_dirty(self, f):
+		self._graph.set_dirty(f)
+
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class Pipeline(PipelineConstructor):
 	def __init__(self, graph, target_module):
 		PipelineConstructor.__init__(self, graph, target_module)
+		self.internal_folder = None
 
 	def _get_exec_file(self, path_to_file):
 		script = None

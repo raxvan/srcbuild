@@ -65,10 +65,11 @@ class Solution(package_graph.ModuleGraph):
 
 		self.builders = {}
 		self.hashes = None
-		self.hachcache = {}
+		self.hashcache = {}
 
 		self.reconfigure = reconfigure
 
+		self.internal_folder = None
 		self.pipeline_dirname = None #short name for pipeline output
 		self.output = None #output dir
 		self.logsdir = None #log output dir
@@ -125,19 +126,23 @@ class Solution(package_graph.ModuleGraph):
 
 		return os.path.join(self.pipeline_dirname, filename)
 
+	def set_dirty(self, absfile):
+		self.hashcache[absfile] = "dirty"
+
 	def get_file_hash(self, absfile):
-		h = self.hachcache.get(absfile, None)
+
+		h = self.hashcache.get(absfile, None)
 		if h != None:
 			return h
 
 		hc = pipeline_utils.sha256sum(absfile)
-		self.hachcache[absfile] = hc
+		self.hashcache[absfile] = hc
 		return hc
 
 
 	def check_for_changes_in_database(self, module, data):
 
-		modinfo = data.get('module', None)			
+		modinfo = data.get('module', None)
 
 		if (modinfo == None):
 			return [f"{_cred}'module' seems to be missing ...{_cend}"]
@@ -264,7 +269,7 @@ class Solution(package_graph.ModuleGraph):
 		if (builder == None):
 			raise Exception(f"Could not find builder '{builder_name}'")
 
-		instance_name = basemodule.get_simplified_name() + "." + pipeline_utils.kwargskey(data)
+		instance_name = f"{basemodule.get_simplified_name()}.{builder_name}.{pipeline_utils.kwargskey(data)}"
 		desc_path = os.path.join(self.submodulesdir, instance_name + ".json")
 		content, message = self.check_changes_with_file(builder.module, instance_name, desc_path)
 
@@ -292,14 +297,19 @@ class Solution(package_graph.ModuleGraph):
 
 		return r
 
+	def get_internal_folder(self, fpath):
+		return os.path.join(self.internal_folder, fpath)
 
 	def execute(self, path):
 		cfg, root_modules = self.configure([path])
 
 		root_module = root_modules[0]
 
+		#self.internal_folder = "/home/wspace"
+		self.internal_folder = root_module.get_package_dir()
+
 		self.pipeline_dirname = os.path.join(".pipeline",root_module.get_simplified_name())
-		self.output = os.path.join(root_module.get_package_dir(), self.pipeline_dirname)
+		self.output = os.path.join(self.internal_folder, self.pipeline_dirname)
 		self.output = os.path.abspath(self.output)
 		self.logsdir = os.path.join(self.output, "logs")
 
@@ -334,7 +344,11 @@ class Solution(package_graph.ModuleGraph):
 
 			modstack.extend(self.get_next_modules(mk, m))
 
-		self.hashes.update(self.hachcache)
+		self.hashes.update(self.hashcache)
+		for k,v in self.hashcache.items():
+			if v == "dirty":
+				self.hashes[k] = pipeline_utils.sha256sum(k)
+
 		package_utils.save_json(self.hashes, hashes_file)
 
 		#check if all modules are built
@@ -358,3 +372,4 @@ def run_pipeline(path, reconfigure):
 
 	mg = Solution(reconfigure)
 	mg.execute(path)
+
