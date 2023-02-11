@@ -113,12 +113,14 @@ class PremakeContext():
 
 		replacemap = {
 			"__NAME__" : _get_project_name(item),
-			"__INCL__" : ",".join(['"' + mrp(d, target_build_folder) + '"' for d in all_includes]),
-			"__SRC__" : ",".join(['"' + mrp(d, target_build_folder) + '"' for d in all_sources]),
-			"__DEF__" : ",".join(['"' + d + '"' for d,_ in all_defines.items()]),
+			"__INCL__" : ",".join(sorted(['"' + mrp(d, target_build_folder) + '"' for d in all_includes])),
+			"__SRC__" : ",".join(sorted(['"' + mrp(d, target_build_folder) + '"' for d in all_sources])),
+			"__DEF__" : ",".join(sorted(['"' + d + '"' for d,_ in all_defines.items()])),
 			"__LINKS__" : ",".join(
-				['"' + d.get_name() + '"' for d in all_links] +
-				['"' + mrp(d, target_build_folder) + '"' for d in extra_links]
+				sorted(
+					['"' + d.get_name() + '"' for d in all_links] +
+					['"' + mrp(d, target_build_folder) + '"' for d in extra_links]
+				)
 			),
 			"__KIND__" : _get_project_kind(item),
 			"__STANDARD__" : _get_cpp_standard(item),
@@ -132,19 +134,25 @@ class PremakeContext():
 
 	def run(self, solution_name, output_dir):
 
-		premake_path = os.path.join(output_dir,"generator.premake.lua")
-		tout = open(premake_path,"w")
+		generator_file = ""
 
 		#solution entry
 		header = self.generate_header(solution_name)
-		tout.write(header)
+		generator_file = generator_file + header
 
 		#projects:
 		for m in self.solution.get_modules():
 			content = self.append_project_to_file(output_dir, m)
-			tout.write(content)
+			generator_file = generator_file + content
 
-		tout.close()
+		premake_path = os.path.join(output_dir,"generator.premake.lua")
+		#tout = open(premake_path,"e")
+
+		if(shell_utils.save_if_changed(premake_path, generator_file) == False):
+			#no changes
+			print("No changes ...")
+			return
+
 
 		#actually generate the solution
 		premake_os = _get_premake_os_arg()

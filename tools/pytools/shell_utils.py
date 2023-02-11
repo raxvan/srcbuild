@@ -59,7 +59,17 @@ def rmdir(dir_path):
 
 
 def read_text_file(abs_file_path):
-	f = open(abs_file_path,"r");
+	f = open(abs_file_path,"r")
 	content = f.read()
 	f.close()
 	return content
+
+
+def save_if_changed(abs_file_path, content):
+	if read_text_file(abs_file_path) != content:
+		f = open(abs_file_path,"w")
+		f.write(content)
+		f.close()
+		return True
+	return False
+
