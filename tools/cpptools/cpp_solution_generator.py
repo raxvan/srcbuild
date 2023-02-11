@@ -38,6 +38,15 @@ class Solution(package_graph.ModuleGraph):
 	def create_module(self, modkey, modpath):
 		return ProjectModule(modkey, modpath, self)
 
+	def run_autogenerate(self, module, autogen_list):
+		import source_generator
+
+		for a in autogen_list:
+			tags, path = package_utils._parse_key(a)
+			abs_module_path = self.locator.resolve_abspath_or_die(module, path, tags)
+			basepath, name = os.path.split(abs_module_path)
+			source_generator.generate(name.replace(".autogen.py", ""), abs_module_path, basepath)
+
 	def generate(self, path):
 
 		cfg, root_modules = self.configure([path])
@@ -68,6 +77,10 @@ class Solution(package_graph.ModuleGraph):
 			m.content.config("cppstd")
 			m.content.config("type")
 			m.content.config("warnings")
+
+			autogenerate_proc = m.get_proc("autogenerate")
+			if autogenerate_proc != None:
+				self.run_autogenerate(m, autogenerate_proc())
 
 			construct_proc = m.get_proc("construct")
 			if construct_proc == None:
