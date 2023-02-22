@@ -14,7 +14,7 @@ def _load_module(abs_path_to_pyfile, load_location):
 	module_context = importlib.util.module_from_spec(spec)
 	spec.loader.exec_module(module_context)
 
-	#source hash	
+	#source hash
 	sh = hashlib.sha256(spec.loader.get_data(abs_path_to_pyfile)).hexdigest()
 
 	return (module_context, sh)

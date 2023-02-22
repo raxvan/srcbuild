@@ -24,7 +24,7 @@ def main_info(args):
 
 	package_utils.display_status("DONE.")
 
-	print("\nMODULES:")
+	print("\n>MODULES:")
 
 	mg.print_info(args.pkey, args.psha, args.ppath)
 	if args.link_tree == True:
@@ -36,7 +36,7 @@ def main_info(args):
 
 
 	if cfg != None:
-		print("-CONFIG:")
+		print(">CONFIG:")
 		print(cfg._get_config_ini(mg))
 
 def main_solution(args):

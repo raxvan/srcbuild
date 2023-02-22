@@ -150,7 +150,7 @@ class PremakeContext():
 
 		if(shell_utils.save_if_changed(premake_path, generator_file) == False):
 			#no changes
-			print("No changes ...")
+			print("No changes...")
 			return
 
 
