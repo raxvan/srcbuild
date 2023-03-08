@@ -38,14 +38,21 @@ class Solution(package_graph.ModuleGraph):
 	def create_module(self, modkey, modpath):
 		return ProjectModule(modkey, modpath, self)
 
-	def run_autogenerate(self, module, autogen_list):
+	def run_autogenerate(self, autogenerate_map):
 		import source_generator
 
+		for k,v in autogenerate_map.items():
+			source_generator.generate(k, v)
+
+
+	def collect_autogenerate(self, module, autogenerate_map, autogen_list):
 		for a in autogen_list:
 			tags, path = package_utils._parse_key(a)
 			abs_module_path = self.locator.resolve_abspath_or_die(module, path, tags)
 			basepath, name = os.path.split(abs_module_path)
-			source_generator.generate(name.replace(".autogen.py", ""), abs_module_path, basepath)
+
+			autogenerate_map.setdefault(name.replace(".autogen.py", ""), []).append(abs_module_path)
+			#source_generator.generate(name.replace(".autogen.py", ""), abs_module_path, basepath)
 
 	def generate(self, path):
 
@@ -69,6 +76,15 @@ class Solution(package_graph.ModuleGraph):
 
 		package_utils.display_status("GENERATING...")
 
+		#collect autogenerate
+		autogenerate_map = {}
+		for mk, m in all_modules.items():
+			autogenerate_proc = m.get_proc("autogenerate")
+			if autogenerate_proc != None:
+				self.collect_autogenerate(m, autogenerate_map, autogenerate_proc())
+
+		self.run_autogenerate(autogenerate_map)
+
 		for mk, m in all_modules.items():
 			m.content = self.create_constructor(m)
 
@@ -77,10 +93,6 @@ class Solution(package_graph.ModuleGraph):
 			m.content.config("cppstd")
 			m.content.config("type")
 			m.content.config("warnings")
-
-			autogenerate_proc = m.get_proc("autogenerate")
-			if autogenerate_proc != None:
-				self.run_autogenerate(m, autogenerate_proc())
 
 			construct_proc = m.get_proc("construct")
 			if construct_proc == None:
@@ -150,5 +162,3 @@ def create_solution(path, target, force):
 		return generate_cmake_project(path, force)
 
 	return None
-
-
