@@ -106,7 +106,7 @@ class CmakeContext():
 			"__INCL__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + mrp(d, target_build_folder) for d in all_includes]),
 			"__SRC__" : "\n\t".join(["${CMAKE_CURRENT_SOURCE_DIR}/../../" + mrp(d, target_build_folder) for d in all_sources]),
 			"__DEF__" : "\n\t".join(all_defines),
-			"__LINKS__" : "\n\t".join(all_links),
+			"__LINKS__" : "\n\t".join([d.get_name() for d in all_links]),
 			"__ADD_TYPE__" : cmake_add_type[itype],
 			"__ADD_TYPE_DATA__" : cmake_add_type_data[itype],
 			"__STANDARD__" : _get_cpp_standard(item),

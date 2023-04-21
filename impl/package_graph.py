@@ -68,7 +68,7 @@ class Module(package_utils.PackageEntry):
 		self._abs_pipeline_dir, self._pipeline_filename = os.path.split(abs_pipeline_path)
 
 		self._name = self._pipeline_filename.replace(".pak.py","")
-		self._simplified_name = self._name.replace(".","_").replace("-","_").lower()
+		self._simplified_name = self._name #self._name.replace(".","_").replace("-","_").lower()
 
 		self.links = {} #key==modkey, value==ModuleLink
 		#^ children
@@ -252,6 +252,9 @@ class ModuleGraph():
 	def create_and_validate_module(self, modkey, modpath):
 		if not os.path.exists(modpath):
 			raise Exception(f"Module `{modpath}` not found!")
+
+		if not os.path.isfile(modpath):
+			raise Exception(f"Path `{modpath}` is not a file!")
 
 		m = self.create_module(modkey, modpath)
 

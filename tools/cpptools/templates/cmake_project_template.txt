@@ -50,6 +50,18 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		"$<$<CONFIG:Release>:-Ofast>"
 	)
 
+	if(ENABLE_ADDRESS_SANITIZER)
+		# https://github.com/google/sanitizers/wiki/AddressSanitizer
+		list(APPEND CUSTOM_COMPILE_OPTIONS
+			"-fsanitize=address"
+			"-fno-omit-frame-pointer"
+		)
+		list(APPEND CUSTOM_LINK_OPTIONS
+			"-fsanitize=address"
+			"-fno-omit-frame-pointer"
+		)
+	endif()
+
 	if(__FULL_WARNINGS__)
 		# full warnings, w4, warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "-Wall" "-Wextra" "-Werror")
@@ -132,7 +144,7 @@ add_custom_command(
 	TARGET __NAME__ POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy
 		$<TARGET_FILE:__NAME__>
-		${CMAKE_CURRENT_SOURCE_DIR}/../../bin/$<CONFIG>/$<TARGET_FILE_NAME:__NAME__>
-	COMMENT "Copy binary to ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${CMAKE_BUILD_TYPE}/"
+		${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>
+	COMMENT "Copy binary to ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/"
 )
 

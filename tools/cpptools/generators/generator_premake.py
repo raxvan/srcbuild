@@ -92,7 +92,7 @@ class PremakeContext():
 		self.config = config
 
 	def generate_header(self, solution_name):
-		sname = "_" + solution_name.replace("-","_")
+		sname = "_" + solution_name #.replace("-","_")
 		return self.premake_workspace.replace("__SOLUTION_NAME__",sname) + "\n"
 
 	def generate_project_str(self, replmap):
