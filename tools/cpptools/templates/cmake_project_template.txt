@@ -139,7 +139,7 @@ target_link_libraries(__NAME__ PRIVATE
 )
 
 ##############################################################################################
-
+message(STATUS "=> OUTPUT set to:" ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>)
 add_custom_command(
 	TARGET __NAME__ POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy

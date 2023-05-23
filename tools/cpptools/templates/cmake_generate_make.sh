@@ -6,7 +6,7 @@ then
 	exit -1
 fi
 
-export BUILD_SUBDIR=$1
+export BUILD_OUT_DIR=$1
 export BUILD_CONFIG=$2 #Debug Release ...
 
 #https://stackoverflow.com/questions/2264428/how-to-convert-a-string-to-lower-case-in-bash
@@ -24,10 +24,10 @@ do
 done
 
 
-mkdir -p $BUILD_SUBDIR
-cd $BUILD_SUBDIR
+mkdir -p $BUILD_OUT_DIR
+cd $BUILD_OUT_DIR
 
-cmake -G "Unix Makefiles" ${ADDRESS_SANITIZER} -DOUTPUT_BINSUBDIR="${BUILD_SUBDIR}" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" -DCMAKE_BUILD_TYPE=$BUILD_CONFIG ../
+cmake -G "Unix Makefiles" ${ADDRESS_SANITIZER} -DOUTPUT_BINSUBDIR="${BUILD_OUT_DIR}" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" -DCMAKE_BUILD_TYPE=$BUILD_CONFIG ../
 
 cd -
 
