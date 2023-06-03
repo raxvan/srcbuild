@@ -4,14 +4,14 @@ cmake_minimum_required(VERSION 3.11)
 # set the project name
 project(__SOLUTION_NAME__)
 
-message(STATUS "=> Config types: ${CMAKE_CONFIGURATION_TYPES}")
-message(STATUS "=> Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "=> CMAKE_CXX_COMPILER_ID:${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "<<< ! >>> Config types: ${CMAKE_CONFIGURATION_TYPES}")
+message(STATUS "<<< ! >>> Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "<<< ! >>> CMAKE_CXX_COMPILER_ID:${CMAKE_CXX_COMPILER_ID}")
 
 if(NOT DEFINED OUTPUT_BINSUBDIR)
     message( FATAL_ERROR "Missing subdirectory for executable!" )
 else()
-	message( STATUS "=> Output set to ${OUTPUT_BINSUBDIR} ")
+	message( STATUS "<<< ! >>> Output set to ${OUTPUT_BINSUBDIR} ")
 endif()
 
 if(NOT DEFINED ENABLE_ADDRESS_SANITIZER)
@@ -19,8 +19,8 @@ if(NOT DEFINED ENABLE_ADDRESS_SANITIZER)
 endif()
 
 if(ENABLE_ADDRESS_SANITIZER)
-	message(STATUS "=> ENABLE_ADDRESS_SANITIZER:enabled")
+	message(STATUS "<<< ! >>> ENABLE_ADDRESS_SANITIZER:enabled")
 else()
-	message(STATUS "=> ENABLE_ADDRESS_SANITIZER:disabled")
+	message(STATUS "<<< ! >>> ENABLE_ADDRESS_SANITIZER:disabled")
 endif()
 

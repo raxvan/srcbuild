@@ -41,6 +41,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+
 	list(APPEND CUSTOM_COMPILE_OPTIONS
 		"$<$<CONFIG:Release>:-Ofast>"
 		"-fms-extensions"
@@ -48,6 +49,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	)
 	list(APPEND CUSTOM_LINK_OPTIONS
 		"$<$<CONFIG:Release>:-Ofast>"
+	)
+
+	list(APPEND CUSTOM_LINK_OPTIONS
+		#for enhanced backtrace results
+		"$<$<CONFIG:Debug>:-rdynamic>"
 	)
 
 	if(ENABLE_ADDRESS_SANITIZER)
@@ -139,7 +145,7 @@ target_link_libraries(__NAME__ PRIVATE
 )
 
 ##############################################################################################
-message(STATUS "=> OUTPUT set to:" ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>)
+message(STATUS "<<< ! >>> OUTPUT set to:" ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>)
 add_custom_command(
 	TARGET __NAME__ POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy
