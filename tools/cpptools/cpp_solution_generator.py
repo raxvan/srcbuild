@@ -39,6 +39,9 @@ class Solution(package_graph.ModuleGraph):
 		return ProjectModule(modkey, modpath, self)
 
 	def run_autogenerate(self, autogenerate_map):
+		if not autogenerate_map:
+			return
+
 		import source_generator
 
 		for k,v in autogenerate_map.items():

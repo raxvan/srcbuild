@@ -11,14 +11,26 @@ then
 	exit -1
 fi
 
-export BUILD_OUT_DIR=$1
+export BUILD_FOLDER=build
 export BUILD_CONFIG=$1
 	#^ Debug/Release
 
-mkdir -p $BUILD_OUT_DIR
-cd $BUILD_OUT_DIR
+ADDRESS_SANITIZER=-DENABLE_ADDRESS_SANITIZER=NO
 
-cmake -B$BUILD_CONFIG -DOUTPUT_BINSUBDIR="${BUILD_CONFIG}" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" -DCMAKE_BUILD_TYPE=$BUILD_CONFIG ../
+
+for arg in "$@"
+do
+    if [ "$arg" == "--use-address-sanitizer" ]; then
+        ADDRESS_SANITIZER=-DENABLE_ADDRESS_SANITIZER=YES
+        break
+    fi
+done
+
+
+mkdir -p $BUILD_FOLDER
+cd $BUILD_FOLDER
+
+cmake -B$BUILD_CONFIG ${ADDRESS_SANITIZER} -DOUTPUT_BINSUBDIR="${BUILD_CONFIG}" -DCMAKE_CONFIGURATION_TYPES="Debug;Release" -DCMAKE_BUILD_TYPE=$BUILD_CONFIG ../
 cmake --build $BUILD_CONFIG
 
 cd -
