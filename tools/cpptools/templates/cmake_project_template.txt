@@ -9,6 +9,8 @@ if(NOT DEFINED IGNORE_CUSTOM_CPP_STANDARD)
 	set(CMAKE_CXX_STANDARD_REQUIRED True)
 endif()
 
+set(FINAL_COPY_STEP ON)
+
 list(APPEND CUSTOM_COMPILE_OPTIONS)
 list(APPEND CUSTOM_LINK_OPTIONS)
 
@@ -86,6 +88,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		#"/Zc:preprocessor"
 	)
 
+	set(FINAL_COPY_STEP OFF)
+
 	if(__FULL_WARNINGS__)
 		# full warnings, w4, warnings as errors
 		list(APPEND CUSTOM_COMPILE_OPTIONS "/W4" "/WX")
@@ -145,16 +149,23 @@ target_link_libraries(__NAME__ PRIVATE
 )
 
 ##############################################################################################
-#message(STATUS "<<< ! >>> OUTPUT set to:" ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>)
-add_custom_command(
-	TARGET __NAME__ POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy
-		$<TARGET_FILE:__NAME__>
-		${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>
-	#COMMENT " >>> OUTPUT: ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>"
-)
-add_custom_command(
-	TARGET __NAME__ POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E echo " \\>\\>\\> OUTPUT: ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>"
-)
+if(FINAL_COPY_STEP)
+	add_custom_command(
+		TARGET __NAME__ POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			$<TARGET_FILE:__NAME__>
+			${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>
+	)
+	add_custom_command(
+		TARGET __NAME__ POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E echo " \\>\\>\\> OUTPUT: ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${OUTPUT_BINSUBDIR}/$<TARGET_FILE_NAME:__NAME__>"
+	)
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+	message(STATUS "<<< ! >>> Output set to: ${CMAKE_CURRENT_SOURCE_DIR}/../../bin")
+	set_target_properties(__NAME__ PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Debug"
+		RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Release")
+endif()
 

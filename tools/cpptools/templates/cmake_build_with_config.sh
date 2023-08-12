@@ -1,17 +1,24 @@
 #!/bin/bash
 
+# Can build on linux/unix/etc with "default" builder using a config
+
 #https://stackoverflow.com/questions/24460486/cmake-build-type-is-not-being-used-in-cmakelists-txt
 
 #export CC=/usr/bin/clang
 #export CXX=/usr/bin/clang++
 
+
+echo ----------------------------------------------------------------------------------------------------------------
+echo ...
+echo ----------------------------------------------------------------------------------------------------------------
+
 if [ $# -eq 0 ]
 then
-	>&2 echo "Missing configudation argument, use any of [Debug Release]"
+	>&2 echo "Missing configudation argument, use any of [Debug,Release]"
 	exit -1
 fi
 
-export BUILD_FOLDER=build
+export BUILD_FOLDER=intermediate
 export BUILD_CONFIG=$1
 	#^ Debug/Release
 

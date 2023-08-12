@@ -10,20 +10,24 @@ python3 /wspace/workspace/srcbuild/srcbuild.py solution cmake ${TARGET_PROJECT_I
 
 eval "$(python3 /wspace/workspace/srcbuild/tools/assembly-line/prepare_environment.py wspace-exe)"
 
-#build and stuff
+#-------------------------------------------------------------------------------------
+#generate solutoins
 cd ${ABS_SOLUTION_DIR}
 chmod +x ./cmake_generate_make.sh
 
 ./cmake_generate_make.sh wspace-debug Debug
 ./cmake_generate_make.sh wspace-release Release
 
+#-------------------------------------------------------------------------------------
+#build solutions
 cd ${ABS_SOLUTION_DIR}/wspace-debug
 make
 
 cd ${ABS_SOLUTION_DIR}/wspace-release
 make
 
-#run leak detection
+#-------------------------------------------------------------------------------------
+#run builds
 cd ${ABS_SOLUTION_DIR}
 
 ./bin/wspace-debug/${EXECUTABLE_NAME}

@@ -28,7 +28,7 @@ call %WORKSPACE_HUB%/.user/workspace_config.cmd
 "%ENVCONF_MSBUILD%" %ABS_SOLUTION_DIR%/%SOLUTION_NAME% /m /p:RunCodeAnalysis=true /p:Configuration=Release /p:Platform=x64
 
 ::-------------------------------------------------------------------------------------
-:: run files
+:: run builds
 
 cd %ABS_SOLUTION_DIR%
 

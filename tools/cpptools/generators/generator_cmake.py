@@ -68,10 +68,9 @@ class CmakeContext():
 		self.cmake_workspace = shell_utils.read_text_file(os.path.join(template_folder,"cmake_workspace_template.txt"))
 		self.cmake_project_template = shell_utils.read_text_file(os.path.join(template_folder,"cmake_project_template.txt"))
 		fc = [
-			"cmake_clean.sh",
-			"cmake_build.sh",
+			"cmake_build_with_config.sh",
 			"cmake_generate_make.sh",
-			"cmake_generate_vs2019.bat",
+			"cmake_generate_vs2022.bat",
 		]
 		self.files_to_copy = { x : os.path.join(template_folder, x) for x in fc }
 
