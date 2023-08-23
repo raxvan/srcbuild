@@ -4,6 +4,7 @@ import generator_query
 import zipfile
 import datetime
 import time
+import json
 
 
 ##################################################################################################################################
@@ -45,37 +46,19 @@ class ZipContext():
 		root_item_wpath = os.path.relpath(root_item.get_package_absolute_path(), workspace_root_dir)
 		
 		file_list = []
+		package_list = {}
+		package_dependency = {}
+
+		root_item.dump_dependency_tree(package_dependency)
 		for m in self.solution.get_modules():
 			self.get_files_list(file_list, m)
+			package_list[m.key] = m.get_package_relative_path(workspace_root_dir)
 
 		#files
-		target_metadata_filename = "package.metadata"
-		target_ini_filename = "package.ini"
+		metadata_filename = "package.json"
 		target_zip_file = os.path.join(output_dir,"package.zip")
-		target_metadata_file = os.path.join(output_dir,target_metadata_filename)
-		target_ini_file = os.path.join(output_dir,target_ini_filename)
+		target_metadata_file = os.path.join(output_dir,metadata_filename)
 
-
-		#info
-		create_time,create_time_unix = _nice_time()
-
-		fini = open(target_ini_file, "w");
-		fini.write(f"TIME={create_time}\n")
-		fini.write(f"UNIX_TIMESTAMP={create_time_unix}\n")
-		fini.write(f"ROOT_WPATH={root_item_wpath}\n")
-		fini.write(f"ROOT_FILE={root_item_file}\n")
-		fini.write(f"ROOT_DIR={root_item_dir}\n")
-		fini.write(f"FILES={len(file_list)}\n")
-		fini.close()
-
-		finfo = open(target_metadata_file, "w")
-		finfo.write(f"#TIME:{create_time[0]}\n")
-		finfo.write(f"#UNIX-TIMESTAMP={create_time_unix}\n")
-		finfo.write(f"#ROOT-WPATH:{root_item_wpath}\n")
-		finfo.write(f"#ROOT-FILE:{root_item_file}\n")
-		finfo.write(f"#ROOT-DIR:{root_item_dir}\n")
-		finfo.write(f"#FILES:{len(file_list)}\n")
-		
 		#info
 		info_string = f" [{len(file_list)} files -> {target_zip_file}]"
 		print(info_string)
@@ -91,6 +74,7 @@ class ZipContext():
 		total_files_count = len(file_list)
 		progress_bar_size = len(info_string) - 3
 
+		relateive_file_list = []
 		#loop over files
 		for f in file_list:
 
@@ -105,16 +89,27 @@ class ZipContext():
 			relative_path = os.path.relpath(f, workspace_root_dir)
 			fzip.write(f, relative_path)
 
-			#add entry to metadata file
-			finfo.write(f"+{relative_path}\n")
+			#store metadata
+			relateive_file_list.append(relative_path)
 
+		create_time_str,create_time_unix = _nice_time()
+		metadata = {
+			"time" : create_time_str,
+			"unix-timestamp" : create_time_unix,
+			"package-path" : root_item_wpath,
+			"package-file" : root_item_file,
+			"package-dir" : root_item_dir,
+			"package-key" : root_item.key,
+			"file-count" : len(file_list),
+			"files" : relateive_file_list,
+			"packages" : package_list,
+			"dependency-graph" : package_dependency,
+		}
+		fjson = open(target_metadata_file, "w")
+		fjson.write(json.dumps(metadata, indent=2))
+		fjson.close()
 
-		end_time,end_time_unix = _nice_time()
-		finfo.write(f"#DURATION:{end_time_unix - create_time_unix}\n")
-		finfo.close()
-
-		#fzip.write(target_metadata_file, target_metadata_filename)
-		fzip.write(target_ini_file, target_ini_filename)
+		fzip.write(target_metadata_file, metadata_filename)
 
 		fzip.close()
 

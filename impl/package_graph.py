@@ -111,6 +111,9 @@ class Module(package_utils.PackageEntry):
 	def get_simplified_name(self):
 		return self._simplified_name
 
+	def get_package_relative_path(self, rpath):
+		return os.path.relpath(self._abs_pipeline_path, rpath)
+
 	def get_package_absolute_path(self):
 		return self._abs_pipeline_path
 
@@ -187,6 +190,15 @@ class Module(package_utils.PackageEntry):
 			m = m + " [0] *"
 
 		print (m)
+
+	def dump_dependency_tree(self, out):
+		this_links = {}
+		if self.links:
+			for l,lm in self.links.items():
+				mod = self.graph.modules.get(l, None)
+				mod.dump_dependency_tree(this_links)
+
+		out[self.key] = this_links
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------------------------------
