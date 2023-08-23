@@ -14,10 +14,10 @@ class ProjectModule(package_graph.Module):
 		self.content = None
 
 class Solution(package_graph.ModuleGraph):
-	def __init__(self, platform, builder, override_config):
+	def __init__(self, builder, override_config):
 		package_graph.ModuleGraph.__init__(self)
 
-		self.platform = platform
+		#self.platform = platform
 		self.builder = builder
 
 		self.override_config = override_config
@@ -25,8 +25,7 @@ class Solution(package_graph.ModuleGraph):
 	def create_configurator(self):
 		cfg = package_graph.ModuleGraph.create_configurator(self)
 
-		cfg.option("platform",self.platform,["win32"])
-		cfg.option("builder",self.builder,["msvc","cmake"])
+		cfg.option("builder",self.builder,["msvc","cmake", "zip"])
 		cfg.option("cppstd","20",["11","14","17","20"])
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
@@ -91,7 +90,7 @@ class Solution(package_graph.ModuleGraph):
 		for mk, m in all_modules.items():
 			m.content = self.create_constructor(m)
 
-			m.content.config("platform")
+			#m.content.config("platform")
 			m.content.config("builder")
 			m.content.config("cppstd")
 			m.content.config("type")
@@ -122,15 +121,19 @@ class Solution(package_graph.ModuleGraph):
 		return (root_module.get_name(), output, cfg)
 
 
-def generate_win_project(path, force):
+def _import_generators():
+	_this_dir = os.path.dirname(os.path.abspath(__file__))
+	sys.path.append(os.path.join(_this_dir,"generators"))
+
+
+def generate_premake_project(path, force):
 	path = os.path.abspath(path)
 
-	mg = Solution("win32","msvc", force)
+	mg = Solution("msvc", force)
 
 	solution_name, out_dir, config = mg.generate(path)
 
-	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"generators"))
+	_import_generators()
 
 	import generator_premake
 
@@ -142,12 +145,11 @@ def generate_win_project(path, force):
 def generate_cmake_project(path, force):
 	path = os.path.abspath(path)
 
-	mg = Solution("win32","cmake", force)
+	mg = Solution("cmake", force)
 
 	solution_name, out_dir, config = mg.generate(path)
 
-	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"generators"))
+	_import_generators()
 
 	import generator_cmake
 
@@ -156,12 +158,28 @@ def generate_cmake_project(path, force):
 
 	return mg
 
+def generate_zip_project(path, force):
+	path = os.path.abspath(path)
+
+	mg = Solution("zip", force)
+
+	solution_name, out_dir, config = mg.generate(path)
+
+	_import_generators()
+
+	import generator_zip
+
+	g = generator_zip.ZipContext(mg, config)
+	g.run(solution_name, out_dir)
+
+	return mg
 
 
 def create_solution(path, target, force):
-	if target == "win":
-		return generate_win_project(path, force)
+	if target == "vs":
+		return generate_premake_project(path, force)
 	elif target == "cmake":
 		return generate_cmake_project(path, force)
-
+	elif target == "zip":
+		return generate_zip_project(path, force)
 	return None

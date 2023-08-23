@@ -126,8 +126,8 @@ class CmakeContext():
 
 	def run(self, solution_name, output_dir):
 
-		premake_path = os.path.join(output_dir,"CMakeLists.txt")
-		tout = open(premake_path,"w")
+		cmakelists_path = os.path.join(output_dir,"CMakeLists.txt")
+		tout = open(cmakelists_path,"w")
 
 		#solution entry
 		header = self.generate_header(solution_name)
@@ -144,4 +144,4 @@ class CmakeContext():
 			output_path = os.path.join(output_dir, k)
 			shutil.copyfile(v,output_path)
 
-		print(premake_path)
+		print(f"Generated solution: {cmakelists_path}")

@@ -1,7 +1,10 @@
 @echo on
 setlocal enabledelayedexpansion
+
 set "WORKSPACE_HUB=%~1"
+::^ workspace repo path
 set "THIS_WORKSPACE=%~2"
+::^ workspace folder path
 
 set "TARGET_PROJECT_IN_WORKSPACE=%~3"
 

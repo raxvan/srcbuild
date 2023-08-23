@@ -39,7 +39,7 @@ def main_info(args):
 		print(">CONFIG:")
 		print(cfg._get_config_ini(mg))
 
-def main_solution(args):
+def main_build(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
 	sys.path.append(os.path.join(_this_dir,"tools","cpptools"))
 
@@ -66,11 +66,12 @@ def main(args):
 	if acc == "info":
 		main_info(args)
 
-	elif acc == "solution":
-		main_solution(args)
+	elif acc == "build":
+		main_build(args)
 
 	elif acc == "run":
 		main_run(args);
+
 
 
 if __name__ == '__main__':
@@ -92,13 +93,13 @@ if __name__ == '__main__':
 
 	#list_parser = subparsers.add_parser('list', description='Lists package information.')
 	#list_parser.set_defaults(action='list')
-	
-	solution_parser = subparsers.add_parser('solution', description='Generate c++ solutions.')
-	solution_parser.set_defaults(action='solution')
-	solution_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate solution")
-	solution_parser.add_argument('target', choices=['win', 'cmake'], help='Path to root module')
-	solution_parser.add_argument('path', help='Path to root module')
-	solution_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+
+	build_parser = subparsers.add_parser('build', description='Generate c++ solutions.')
+	build_parser.set_defaults(action='build')
+	build_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate config.ini from build folder.")
+	build_parser.add_argument('target', choices=['vs', 'cmake', 'zip'], help='Which builder to use.')
+	build_parser.add_argument('path', help='Path to root module')
+	build_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
 	run_parser = subparsers.add_parser('run', description='Run tasks')
 	run_parser.set_defaults(action='run')

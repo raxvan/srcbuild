@@ -14,22 +14,27 @@ _this_dir = os.path.dirname(os.path.abspath(__file__))
 
 def _get_custom_build_flags(item):
 	opts = []
-	_platform = item.content.get_property_or_die("platform").value
-	_builder = item.content.get_property_or_die("builder").value
-	if _platform == "linux" and _builder == "make":
-		opts.append("-lrt") #no idea for what
-		opts.append("-pthread") #for threading
-	elif _platform == "win32":
-		opts.append("/MP") #enable multiprocessos compilation
+	
+	#_platform = item.content.get_property_or_die("platform").value
+	#_platform = "win32"
+	#_builder = item.content.get_property_or_die("builder").value
+	#if _platform == "linux" and _builder == "make":
+	#	opts.append("-lrt") #no idea for what
+	#	opts.append("-pthread") #for threading
+	#elif _platform == "win32":
+	
+	opts.append("/MP") #enable multiprocessos compilation
 
 	return ",".join(['"' + o + '"' for o in opts])
 
 def _get_custom_link_flags(item):
 	opts = []
-	_platform = item.content.get_property_or_die("platform").value
-	_builder = item.content.get_property_or_die("builder").value
-	if _platform == "linux" and _builder == "make":
-		opts.append("-lpthread") #for threading
+
+	#_platform = item.content.get_property_or_die("platform").value
+	#_platform = "win32"
+	#_builder = item.content.get_property_or_die("builder").value
+	#if _platform == "linux" and _builder == "make":
+	#	opts.append("-lpthread") #for threading
 
 	return ",".join(['"' + o + '"' for o in opts])
 

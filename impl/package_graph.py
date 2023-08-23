@@ -61,8 +61,8 @@ class Module(package_utils.PackageEntry):
 		self.graph = graph
 		self.pipeline = p
 
-		self.sha = s #content sha
 		self.key = modkey #search key
+		self.sha = s #content sha
 
 		self._abs_pipeline_path = abs_pipeline_path
 		self._abs_pipeline_dir, self._pipeline_filename = os.path.split(abs_pipeline_path)
@@ -111,6 +111,15 @@ class Module(package_utils.PackageEntry):
 	def get_simplified_name(self):
 		return self._simplified_name
 
+	def get_package_absolute_path(self):
+		return self._abs_pipeline_path
+
+	def get_package_filename(self):
+		return self._pipeline_filename
+
+	def get_package_dir(self):
+		return self._abs_pipeline_dir
+
 	def get_proc(self, procname):
 		try:
 			return getattr(self.pipeline, procname)
@@ -119,8 +128,7 @@ class Module(package_utils.PackageEntry):
 		except:
 			raise
 
-	def get_package_dir(self):
-		return self._abs_pipeline_dir
+	
 
 	def print_info(self, print_key, print_sha, print_path):
 		m = "- "
