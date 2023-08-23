@@ -41,19 +41,19 @@ def main_info(args):
 
 def main_build(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"tools","cpptools"))
+	sys.path.append(os.path.join(_this_dir,"tools","solution-tools"))
 
-	import cpp_solution_generator
+	import solution_generator
 
 	target = args.target
 	path = args.path
 	force = args.force
 
-	cpp_solution_generator.create_solution(path, target, force)
+	solution_generator.create_solution(path, target, force)
 
 def main_run(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"tools","pipelinetools"))
+	sys.path.append(os.path.join(_this_dir,"tools","pipeline-tools"))
 
 	import pipeline_executor
 	pipeline_executor.run_pipeline(args.path, args.reconfigure)

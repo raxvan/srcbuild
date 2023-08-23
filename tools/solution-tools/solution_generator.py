@@ -29,7 +29,6 @@ class Solution(package_graph.ModuleGraph):
 		cfg.option("cppstd","20",["11","14","17","20"])
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
-
 		cfg.option("default-visual-studio","vs2022",["vs2015","vs2017", "vs2019", "vs2022"])
 
 		return cfg
@@ -170,9 +169,7 @@ def generate_zip_project(path, force):
 	import generator_zip
 
 	g = generator_zip.ZipContext(mg, config)
-	g.run(solution_name, out_dir)
-
-	return mg
+	return g.run(solution_name, out_dir)
 
 
 def create_solution(path, target, force):
