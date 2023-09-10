@@ -123,6 +123,7 @@ class Solution(package_graph.ModuleGraph):
 def _import_generators():
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
 	sys.path.append(os.path.join(_this_dir,"generators"))
+	return _this_dir
 
 
 def generate_premake_project(path, force):
@@ -132,7 +133,7 @@ def generate_premake_project(path, force):
 
 	solution_name, out_dir, config = mg.generate(path)
 
-	_import_generators()
+	_this_dir = _import_generators()
 
 	import generator_premake
 
@@ -148,7 +149,7 @@ def generate_cmake_project(path, force):
 
 	solution_name, out_dir, config = mg.generate(path)
 
-	_import_generators()
+	_this_dir = _import_generators()
 
 	import generator_cmake
 
@@ -164,7 +165,7 @@ def generate_zip_project(path, force):
 
 	solution_name, out_dir, config = mg.generate(path)
 
-	_import_generators()
+	_this_dir = _import_generators()
 
 	import generator_zip
 
