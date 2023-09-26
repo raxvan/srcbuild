@@ -23,7 +23,7 @@ class JsonContent():
 
 	def save(self):
 		f = open(self.path, "w")
-		f.write(json.dumps(self.data))
+		f.write(json.dumps(self.data, indent=4))
 		f.close()
 
 def project_path(relative_item):
@@ -40,7 +40,7 @@ def get_build_debug_task(label):
 	return {
 		"label": label,
 		"type": "shell",
-		"command": "cmake_build_with_config.sh",
+		"command": "./cmake_build_with_config.sh",
 		"windows" : {
 			"command": "./cmake_build_with_config.bat"
 		},
@@ -66,7 +66,7 @@ def get_build_release_task(label):
 	return {
 		"label": label,
 		"type": "shell",
-		"command": "cmake_build_with_config.sh",
+		"command": "./cmake_build_with_config.sh",
 		"windows" : {
 			"command": "./cmake_build_with_config.bat"
 		},
