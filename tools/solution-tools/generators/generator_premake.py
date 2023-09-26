@@ -66,11 +66,11 @@ def _get_warnings(item):
 
 def _get_project_name(item):
 	fixed_name = item.get_name()
+	n = item.content.get_property("exe-name");
+	if n == None:
+		return fixed_name
 
-	if item.content.get_property_or_die("type").value == "exe":
-		fixed_name = "_" + fixed_name
-
-	return fixed_name
+	return n.value
 
 def _get_premake_os_arg():
 	#platform

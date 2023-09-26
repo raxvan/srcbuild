@@ -176,6 +176,9 @@ class PackageConstructor():
 			raise Exception(f"Could not find property {pk}")
 		return p
 
+	def get_property(self, pk):
+		return self._props.get(pk, None)
+
 	def query_props(self, tags):
 		ts = package_utils.make_tags(tags)
 		result = []

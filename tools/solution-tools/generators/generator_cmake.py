@@ -21,11 +21,11 @@ def _get_cpp_standard(item):
 
 def _get_project_name(item):
 	fixed_name = item.get_name()
+	n = item.content.get_property("exe-name");
+	if n == None:
+		return fixed_name
 
-	if item.content.get_property_or_die("type").value == "exe":
-		fixed_name = "_" + fixed_name
-
-	return fixed_name
+	return n.value
 
 def _update_warnings(replacemap, item):
 	warnings_map = {
@@ -69,8 +69,10 @@ class CmakeContext():
 		self.cmake_project_template = shell_utils.read_text_file(os.path.join(template_folder,"cmake_project_template.txt"))
 		fc = [
 			"cmake_build_with_config.sh",
+			"cmake_build_with_config.bat",
 			"cmake_generate_make.sh",
 			"cmake_generate_vs2022.bat",
+			"setup-vscode-workspace.py",
 		]
 		self.files_to_copy = { x : os.path.join(template_folder, x) for x in fc }
 

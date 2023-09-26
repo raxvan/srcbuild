@@ -25,7 +25,7 @@ class Solution(package_graph.ModuleGraph):
 	def create_configurator(self):
 		cfg = package_graph.ModuleGraph.create_configurator(self)
 
-		cfg.option("builder",self.builder,["msvc","cmake", "zip"])
+		cfg.option("builder",self.builder,["msvc", "cmake", "zip"])
 		cfg.option("cppstd","20",["11","14","17","20"])
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
@@ -95,12 +95,18 @@ class Solution(package_graph.ModuleGraph):
 			m.content.config("type")
 			m.content.config("warnings")
 
+
 			construct_proc = m.get_proc("construct")
 			if construct_proc == None:
 				raise Exception(f"Could not find 'construct' function in {m.get_name()}")
 
 			construct_proc(m.content)
 
+			#save name for later use
+			if m.content.get_property_or_die("type").value == "exe":
+				m.content.assign("exe-name","_" + m.get_name())
+
+			#get assets with relative path
 			assets = list(set([p.path for p in m.content.query_files(["asset"])]))
 			for a in assets:
 				h,t = os.path.split(a)
@@ -108,10 +114,11 @@ class Solution(package_graph.ModuleGraph):
 					raise Exception("Duplicate asset foud: " + a)
 				assets_ini[t] = a
 
-			#save json
+			#save json files
 			j = {}
 			m.serialize(j)
 			m.content.serialize(j)
+
 			package_utils.save_json(j, os.path.join(metaout, m.get_name() + ".json"))
 
 		if assets_ini:
