@@ -130,7 +130,7 @@ class Configurator():
 	def link(self, child_info):
 		# links child to current module (parent)
 		tags, path = package_utils._parse_key(child_info)
-		abs_module_path = self.solver.resolve_abspath_or_die(self.active_module, path, tags)
+		abs_module_path = self.solver.resolve_module_or_die(self.active_module, path, tags)
 		modkey = self._safe_modkey(abs_module_path)
 
 		link = self.graph._create_link(self.active_module, modkey, abs_module_path, tags)
@@ -138,31 +138,10 @@ class Configurator():
 			self._configure_module_recursive(link.module)
 		return link
 
-	def link_if_enabled(self, child_info):
+	def link_optional(self, child_info):
 		# links child to current module (parent)
 		tags, path = package_utils._parse_key(child_info)
-		abs_module_path = self.solver.try_resolve_path(self.active_module, path, tags)
-		if abs_module_path == None:
-			return None
-		if not os.path.exists(abs_module_path):
-			return None
-
-		modkey = self._safe_modkey(abs_module_path)
-		current_module = self.graph.modules.get(modkey,None)
-		if current_module == None:
-			return None
-		if current_module.enabled == False:
-			return None
-
-		link = self.graph._create_link(self.active_module, modkey, abs_module_path, tags)
-		if link.module.configured == False:
-			self._configure_module_recursive(link.module)
-		return link
-
-	def link_if_present(self, child_info):
-		# links child to current module (parent)
-		tags, path = package_utils._parse_key(child_info)
-		abs_module_path = self.solver.try_resolve_path(self.active_module, path, tags)
+		abs_module_path = self.solver.try_resolve_module(self.active_module, path, tags)
 		if abs_module_path == None:
 			return None
 		if not os.path.exists(abs_module_path):
@@ -173,6 +152,28 @@ class Configurator():
 		if link.module.configured == False:
 			self._configure_module_recursive(link.module)
 		return link
+
+	#def link_if_enabled(self, child_info):
+	#	# links child to current module (parent)
+	#	tags, path = package_utils._parse_key(child_info)
+	#	abs_module_path = self.solver.try_resolve_path(self.active_module, path, tags)
+	#	if abs_module_path == None:
+	#		return None
+	#		
+	#	if not os.path.exists(abs_module_path):
+	#		return None
+    #
+	#	modkey = self._safe_modkey(abs_module_path)
+	#	current_module = self.graph.modules.get(modkey,None)
+	#	if current_module == None:
+	#		return None
+	#	if current_module.enabled == False:
+	#		return None
+    #
+	#	link = self.graph._create_link(self.active_module, modkey, abs_module_path, tags)
+	#	if link.module.configured == False:
+	#		self._configure_module_recursive(link.module)
+	#	return link
 
 	def option(self, k, default_value, possible_values = None):
 		tags, kv = package_utils._parse_key(k)

@@ -147,6 +147,9 @@ class PremakeContext():
 
 		#projects:
 		for m in self.solution.get_modules():
+			if (m.enabled == False):
+				continue
+				
 			content = self.append_project_to_file(output_dir, m)
 			generator_file = generator_file + content
 

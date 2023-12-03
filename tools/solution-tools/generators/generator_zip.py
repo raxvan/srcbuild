@@ -21,10 +21,11 @@ def _nice_time():
 #	return str(local_time)
 
 class ZipContext():
-	def __init__(self, solution, config):
+	def __init__(self, solution, config, workspace):
 
 		self.solution = solution
 		self.config = config
+		self.workspace_root = workspace
 
 	def get_files_list(self, out_list, item):
 
@@ -39,7 +40,7 @@ class ZipContext():
 
 	def run(self, solution_name, output_dir):
 
-		workspace_root_dir = "/wspace/workspace"
+		workspace_root_dir = self.workspace_root
 		root_item = self.solution.get_module(solution_name)
 		root_item_file = root_item.get_package_filename()
 		root_item_dir = os.path.relpath(root_item.get_package_dir(), workspace_root_dir)
@@ -51,6 +52,8 @@ class ZipContext():
 
 		root_item.dump_dependency_tree(package_dependency)
 		for m in self.solution.get_modules():
+			if (m.enabled == False):
+				continue
 			self.get_files_list(file_list, m)
 			package_list[m.key] = m.get_package_relative_path(workspace_root_dir)
 

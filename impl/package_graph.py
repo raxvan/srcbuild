@@ -7,6 +7,7 @@ import importlib.util
 import package_utils
 import package_config
 import package_constructor
+import package_locator
 
 def _load_module(abs_path_to_pyfile, load_location):
 	ll = "modpak.sha." + load_location
@@ -18,37 +19,6 @@ def _load_module(abs_path_to_pyfile, load_location):
 	sh = hashlib.sha256(spec.loader.get_data(abs_path_to_pyfile)).hexdigest()
 
 	return (module_context, sh)
-
-#--------------------------------------------------------------------------------------------------------------------------------
-
-class ModuleLocator():
-	def __init__(self):
-		pass
-
-	def resolve_path(self, current_module, path, tags):
-		if tags != None and "abspath" in tags:
-			return path
-
-		return os.path.abspath(os.path.join(current_module._abs_pipeline_dir, path))
-
-	def try_resolve_path(self, current_module, path, tags):
-		if tags != None and "abspath" in tags:
-			if os.path.exists(path):
-				return path
-
-		path = os.path.abspath(os.path.join(current_module._abs_pipeline_dir, path))
-		if os.path.exists(path):
-			return path
-
-		return None
-
-	def resolve_abspath_or_die(self, current_module, path, tags):
-		p = self.resolve_path(current_module, path, tags)
-		if p == None or os.path.exists(p) == False:
-			modpath = current_module._abs_pipeline_path
-			raise Exception(f"Could not find path {path} in module {modpath}")
-
-		return p
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -92,7 +62,7 @@ class Module(package_utils.PackageEntry):
 		modinfo["enabled"] = self.enabled
 		modinfo["configured"] = self.configured
 		modinfo["key"] = self.key
-		modinfo["sha"] = self.sha
+		modinfo["module-sha"] = self.sha
 		modinfo["tags"] = list(self.tags)
 
 		links = {}
@@ -260,7 +230,7 @@ class ModuleGraph():
 		return Module(modkey, modpath, self)
 
 	def create_locator(self):
-		return ModuleLocator()
+		return package_locator.ModuleLocator()
 
 	def create_configurator(self):
 		return package_config.Configurator(self.locator, self)
@@ -269,17 +239,17 @@ class ModuleGraph():
 		return package_constructor.PackageConstructor(self, target_module)
 
 
-	def create_and_validate_module(self, modkey, modpath):
-		if not os.path.exists(modpath):
-			raise Exception(f"Module `{modpath}` not found!")
+	def create_and_validate_module(self, modkey, abspath):
+		if not os.path.exists(abspath):
+			raise Exception(f"Module `{abspath}` not found!")
 
-		if not os.path.isfile(modpath):
-			raise Exception(f"Path `{modpath}` is not a file!")
+		if not os.path.isfile(abspath):
+			raise Exception(f"Path `{abspath}` is not a file!")
 
-		m = self.create_module(modkey, modpath)
+		m = self.create_module(modkey, abspath)
 
 		#if not hasattr(m.pipeline, 'configure'):
-		#	raise Exception(f"Module `{modpath}` is missing configure function!")
+		#	raise Exception(f"Module `{abspath}` is missing configure function!")
 
 		return m
 

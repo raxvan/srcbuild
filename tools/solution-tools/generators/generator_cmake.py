@@ -137,6 +137,8 @@ class CmakeContext():
 
 		#projects:
 		for m in self.solution.get_modules():
+			if (m.enabled == False):
+				continue
 			self.generate_project_file(output_dir, m)
 			tout.write("add_subdirectory(projects/" + _get_project_name(m) + ")\n")
 

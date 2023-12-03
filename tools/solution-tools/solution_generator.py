@@ -25,7 +25,7 @@ class Solution(package_graph.ModuleGraph):
 	def create_configurator(self):
 		cfg = package_graph.ModuleGraph.create_configurator(self)
 
-		cfg.option("builder",self.builder,["msvc", "cmake", "zip"])
+		cfg.option("builder", self.builder, ["vs", "cmake", "zip"])
 		cfg.option("cppstd","20",["11","14","17","20"])
 		cfg.option("type","exe",["exe","lib"])
 		cfg.option("warnings","full",["off","default", "full"])
@@ -87,13 +87,18 @@ class Solution(package_graph.ModuleGraph):
 		self.run_autogenerate(autogenerate_map)
 
 		for mk, m in all_modules.items():
+			if m.enabled == False:
+				print(f"> {m.get_name()}".ljust(16) + " -> not enabled ...")
+				continue
+			
+			print(f"> {m.get_name()}".ljust(16) + " -> ok!")
+
 			m.content = self.create_constructor(m)
 
-			#m.content.config("platform")
-			m.content.config("builder")
-			m.content.config("cppstd")
-			m.content.config("type")
-			m.content.config("warnings")
+			m.content.assign_option("builder")
+			m.content.assign_option("cppstd")
+			m.content.assign_option("type")
+			m.content.assign_option("warnings")
 
 
 			construct_proc = m.get_proc("construct")
@@ -124,6 +129,8 @@ class Solution(package_graph.ModuleGraph):
 		if assets_ini:
 			package_utils.save_assets_ini(assets_ini, output)
 
+		package_utils.display_status("DONE...")
+
 		return (root_module.get_name(), output, cfg)
 
 
@@ -132,14 +139,7 @@ def _import_generators():
 	sys.path.append(os.path.join(_this_dir,"generators"))
 	return _this_dir
 
-
-def generate_premake_project(path, force):
-	path = os.path.abspath(path)
-
-	mg = Solution("msvc", force)
-
-	solution_name, out_dir, config = mg.generate(path)
-
+def generate_premake_project(root_workspace, mg, solution_name, out_dir, config):
 	_this_dir = _import_generators()
 
 	import generator_premake
@@ -149,13 +149,7 @@ def generate_premake_project(path, force):
 
 	return mg
 
-def generate_cmake_project(path, force):
-	path = os.path.abspath(path)
-
-	mg = Solution("cmake", force)
-
-	solution_name, out_dir, config = mg.generate(path)
-
+def generate_cmake_project(root_workspace, mg, solution_name, out_dir, config):
 	_this_dir = _import_generators()
 
 	import generator_cmake
@@ -165,26 +159,29 @@ def generate_cmake_project(path, force):
 
 	return mg
 
-def generate_zip_project(path, force):
-	path = os.path.abspath(path)
-
-	mg = Solution("zip", force)
-
-	solution_name, out_dir, config = mg.generate(path)
-
+def generate_zip_project(root_workspace, mg, solution_name, out_dir, config):
 	_this_dir = _import_generators()
 
 	import generator_zip
 
-	g = generator_zip.ZipContext(mg, config)
+	g = generator_zip.ZipContext(mg, config, root_workspace)
 	return g.run(solution_name, out_dir)
 
+def create_solution(root_workspace, path, target, force):
+	path = os.path.abspath(path)
 
-def create_solution(path, target, force):
-	if target == "vs":
-		return generate_premake_project(path, force)
-	elif target == "cmake":
-		return generate_cmake_project(path, force)
-	elif target == "zip":
-		return generate_zip_project(path, force)
-	return None
+	builder = target
+	mg = Solution(builder, force)
+
+	solution_name, out_dir, config = mg.generate(path)
+
+	builder = config.query_option_value("builder")
+
+	if builder == "vs":
+		return generate_premake_project(root_workspace, mg, solution_name, out_dir, config)
+	elif builder == "cmake":
+		return generate_cmake_project(root_workspace, mg, solution_name, out_dir, config)
+	elif builder == "zip":
+		return generate_zip_project(root_workspace, mg, solution_name, out_dir, config)
+	else:
+		raise Exception(f"Unknown builder {builder}")

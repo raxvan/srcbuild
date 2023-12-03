@@ -49,7 +49,7 @@ def main_build(args):
 	path = args.path
 	force = args.force
 
-	solution_generator.create_solution(path, target, force)
+	solution_generator.create_solution("/wspace/workspace", path, target, force)
 
 def main_run(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -57,7 +57,6 @@ def main_run(args):
 
 	import pipeline_executor
 	pipeline_executor.run_pipeline(args.path, args.reconfigure)
-
 
 def main(args):
 
@@ -70,7 +69,7 @@ def main(args):
 		main_build(args)
 
 	elif acc == "run":
-		main_run(args);
+		main_run(args)
 
 
 
@@ -91,15 +90,15 @@ if __name__ == '__main__':
 	info_parser.add_argument('path', help='Path to module to inspect')
 	info_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
-	#list_parser = subparsers.add_parser('list', description='Lists package information.')
-	#list_parser.set_defaults(action='list')
-
 	build_parser = subparsers.add_parser('build', description='Generate c++ solutions.')
 	build_parser.set_defaults(action='build')
 	build_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate config.ini from build folder.")
 	build_parser.add_argument('target', choices=['vs', 'cmake', 'zip'], help='Which builder to use.')
 	build_parser.add_argument('path', help='Path to root module')
 	build_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+
+	#discover_parser = subparsers.add_parser('discover', description='Discover all packages in workspace')
+	#discover_parser.set_defaults(action='discover')
 
 	run_parser = subparsers.add_parser('run', description='Run tasks')
 	run_parser.set_defaults(action='run')

@@ -71,6 +71,13 @@ class PackageConstructor():
 	def module_enabled(self, modname):
 		return self._graph.module_enabled(modname)
 
+	def component_enabled(self, component_name):
+		c = self._config._components.get(component_name, None)
+		if c == None:
+			raise Exception(f"Component {component_name} was not found!")
+		return c.enabled
+
+
 	def module(self, modname):
 		return self._graph.get_module(modname)
 
@@ -81,7 +88,6 @@ class PackageConstructor():
 		if module.key in self._module.links:
 			return module
 		return None
-
 
 	###############################################################################
 	# property setters
@@ -100,32 +106,31 @@ class PackageConstructor():
 
 		return prop_entry
 
-	def config(self, pkey, pvalue = None):
-		# search of pkey in config and optinos and try to set override it with pvalue
-		# if pvalue is None then value is taken from config
+	def assign_option(self, pkey, pvalue = None):
+		tags, key = package_utils._parse_key(pkey)
 
-		c = self._config._options.get(pkey, None)
-		if c == None:
-			raise Exception(f"No configuratin found with name {pkey}")
+		opt = self._config._options.get(key, None)
+		if opt == None:
+			raise Exception(f"No configuratin found with name {key}")
 
 		if pvalue == None:
-			prop = self.assign(pkey, c.get_value())
-			prop.join_tags(c.tags)
+			prop = self.assign(pkey, opt.get_value())
+			prop.join_tags(opt.tags)
 			return prop
-		elif c.allow_value(pvalue) == True:
+		elif opt.allow_value(pvalue) == True:
 			prop = self.assign(pkey, pvalue)
-			prop.join_tags(c.tags)
+			prop.join_tags(opt.tags)
 			return prop
 		else:
 			raise Exception(f"Failed to create property {pkey}")
 
-	def get_config(self, pkey):
+	def get_option(self, pkey):
 		c = self._config._options.get(pkey, None)
 		if c == None:
 			raise Exception(f"No configuratin found with name {pkey}")
 		return c.get_value()
 
-
+	###############################################################################
 	#internal
 	def _add_path_internal(self, apath, constructor, tags):
 		path_entry = self._paths.get(apath, None)
