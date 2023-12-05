@@ -165,9 +165,9 @@ class Solution(package_graph.ModuleGraph):
 		folders = content.get('folders',None)
 
 		if files == None:
-			return [f"{_cred}'files' are be missing ...{_cend}"]
+			return [f"{_cred}'files' are missing ...{_cend}"]
 		if folders == None:
-			return [f"{_cred}'folders' are be missing ...{_cend}"]
+			return [f"{_cred}'folders' are missing ...{_cend}"]
 
 		r = []
 
@@ -330,7 +330,7 @@ class Solution(package_graph.ModuleGraph):
 
 		self.sync_config(os.path.join(self.output, "config.ini"), self.reconfigure)
 
-		self.forward_disable(root_modules)
+		self.build(root_modules)
 
 		modstack = self.leafs.copy()
 

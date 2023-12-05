@@ -20,7 +20,7 @@ def main_info(args):
 
 	cfg, root_modules = mg.configure([path])
 
-	mg.forward_disable(root_modules)
+	mg.build(root_modules)
 
 	package_utils.display_status("DONE.")
 

@@ -171,6 +171,34 @@ class Module(package_utils.PackageEntry):
 		out[self.key] = this_links
 
 #--------------------------------------------------------------------------------------------------------------------------------
+
+class GraphIterator():
+	def __init__(self, counters, links, stack):
+		self.stack = stack
+		self.counters = counters
+		self.links = links
+
+	def begin(self):
+
+		if self.stack:
+			r = self.stack.pop()
+			return r
+		return None
+
+	def end(self, r):
+		parent_lins = self.links.get(r, None)
+		if  parent_lins == None:
+			return
+
+		for link in parent_lins:
+			c = self.counters[link]
+			c -= 1
+			if c == 0:
+				self.stack.append(link)
+			else:
+				self.counters[link] = c
+
+
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class ModuleGraph():
@@ -256,21 +284,21 @@ class ModuleGraph():
 
 	#################################################################################################
 	#utils:
-	def forward_disable(self, modules_list):
+	def build(self, root_modules_list):
 		
 		package_utils.display_status("RUNNING FORWARD DISABLE...")
 
-		while modules_list:
+		while root_modules_list:
 
-			next_modules_list = []
-			for current_module in modules_list:
+			next_root_modules_list = []
+			for current_module in root_modules_list:
 				children_list = self.forward_links.get(current_module.key,None)
 				if children_list == None:
 					continue
 
 				for child in children_list:
 					child_module = self.modules[child]
-					next_modules_list.append(child_module)
+					next_root_modules_list.append(child_module)
 
 					if(child_module.enabled == True):
 						all_parents = self.backward_links[child]
@@ -285,7 +313,40 @@ class ModuleGraph():
 							child_module.enabled = False
 							print("\t-" + child_module.get_name())
 
-			modules_list = next_modules_list
+			root_modules_list = next_root_modules_list
+
+		package_utils.display_status("GENERATING ITERATOR...")
+
+		counters = {}
+		links = {}
+		stack = []
+
+		for mk, m in self.modules.items():
+			if m.enabled == False:
+				print(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled!")
+				continue
+			
+			child_count = 0
+
+			children_list = self.forward_links.get(mk,None)
+			if children_list != None:
+				for c in children_list:
+					child_module = self.modules[c]
+					if child_module.enabled == False:
+						continue
+					
+					links.setdefault(c,[]).append(mk)
+					child_count += 1
+
+			if child_count == 0:
+				stack.append(mk)
+			else:
+				counters[mk] = child_count
+
+			print(f"> {m.get_name()}".ljust(32) + f" -> OK: order={child_count}")
+
+		return GraphIterator(counters, links, stack)
+
 
 	def sync_config(self, abs_path_to_config_ini, override):
 		user_modules = self.configurator._sync_config(self, abs_path_to_config_ini, override)

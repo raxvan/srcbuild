@@ -69,11 +69,9 @@ class Solution(package_graph.ModuleGraph):
 
 		self.sync_config(os.path.join(output, "config.ini"), self.override_config)
 
-		self.forward_disable(root_modules)
+		itr = self.build(root_modules)
 
 		all_modules = self.modules
-
-		assets_ini = {}
 
 		package_utils.display_status("GENERATING...")
 
@@ -86,13 +84,21 @@ class Solution(package_graph.ModuleGraph):
 
 		self.run_autogenerate(autogenerate_map)
 
-		for mk, m in all_modules.items():
-			if m.enabled == False:
-				print(f"> {m.get_name()}".ljust(16) + " -> not enabled ...")
-				continue
-			
-			print(f"> {m.get_name()}".ljust(16) + " -> ok!")
+		assets_ini = {}
 
+
+		#for mk, m in all_modules.items():
+		while True:
+
+			mk = itr.begin()
+			if mk == None:
+				break;
+
+			m = self.modules[mk]
+			#if m.enabled == False:
+			#	print(f"> {m.get_name()}".ljust(16) + " -> not enabled ...")
+			#	continue
+			
 			m.content = self.create_constructor(m)
 
 			m.content.assign_option("builder")
@@ -125,6 +131,10 @@ class Solution(package_graph.ModuleGraph):
 			m.content.serialize(j)
 
 			package_utils.save_json(j, os.path.join(metaout, m.get_name() + ".json"))
+
+			print(f"> {m.get_name()}".ljust(32) + " -> OK!")
+
+			itr.end(mk)
 
 		if assets_ini:
 			package_utils.save_assets_ini(assets_ini, output)
