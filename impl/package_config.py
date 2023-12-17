@@ -139,7 +139,7 @@ class Configurator():
 		return link
 
 	def link_optional(self, child_info):
-		# links child to current module (parent)
+		# links child to current module (parent) if the child exists and it's enabled
 		tags, path = package_utils._parse_key(child_info)
 		abs_module_path = self.solver.try_resolve_module(self.active_module, path, tags)
 		if abs_module_path == None:
@@ -153,7 +153,7 @@ class Configurator():
 			self._configure_module_recursive(link.module)
 		return link
 
-	#def link_if_enabled(self, child_info):
+	#def link_optional(self, child_info):
 	#	# links child to current module (parent)
 	#	tags, path = package_utils._parse_key(child_info)
 	#	abs_module_path = self.solver.try_resolve_path(self.active_module, path, tags)

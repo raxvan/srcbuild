@@ -445,7 +445,7 @@ TAGS("gnuc");
 #endif
 #ifdef __USER_LABEL_PREFIX__
 KEY("__USER_LABEL_PREFIX__");
-VALUE(__USER_LABEL_PREFIX__);
+//VALUE(__USER_LABEL_PREFIX__);
 TAGS("gnuc");
 #endif
 #ifdef __SIZE_TYPE__

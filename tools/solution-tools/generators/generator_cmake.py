@@ -72,6 +72,7 @@ class CmakeContext():
 			"cmake_build_with_config.bat",
 			"cmake_generate_make.sh",
 			"cmake_generate_vs2022.bat",
+			"cmake_generate_xcode.sh",
 			"setup-vscode-workspace.py",
 		]
 		self.files_to_copy = { x : os.path.join(template_folder, x) for x in fc }

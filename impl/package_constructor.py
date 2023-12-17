@@ -106,7 +106,7 @@ class PackageConstructor():
 
 		return prop_entry
 
-	def assign_option(self, pkey, pvalue = None):
+	def assign_config_option(self, pkey, pvalue = None):
 		tags, key = package_utils._parse_key(pkey)
 
 		opt = self._config._options.get(key, None)

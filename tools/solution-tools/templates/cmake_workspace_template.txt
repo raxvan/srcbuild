@@ -6,7 +6,7 @@ project(__SOLUTION_NAME__)
 
 message(STATUS "<<< ! >>> CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "<<< ! >>> Config types: ${CMAKE_CONFIGURATION_TYPES}")
-message(STATUS "<<< ! >>> Build config: ${CMAKE_BUILD_TYPE}")
+message(STATUS "<<< ! >>> Build config: [${CMAKE_BUILD_TYPE}]")
 
 get_property(MCONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(MCONFIG)

@@ -2,7 +2,7 @@
 
 def construct(ctx):
 	
-	ctx.config("type","exe")
+	ctx.assign_config_option("type","exe")
 
 	ctx.fscan("src: ../src")
 	

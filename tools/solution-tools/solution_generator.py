@@ -101,10 +101,10 @@ class Solution(package_graph.ModuleGraph):
 			
 			m.content = self.create_constructor(m)
 
-			m.content.assign_option("builder")
-			m.content.assign_option("cppstd")
-			m.content.assign_option("type")
-			m.content.assign_option("warnings")
+			m.content.assign_config_option("builder")
+			m.content.assign_config_option("cppstd")
+			m.content.assign_config_option("type")
+			m.content.assign_config_option("warnings")
 
 
 			construct_proc = m.get_proc("construct")
