@@ -7,6 +7,6 @@ def configure(ctx):
 def construct(ctx):
 	
 
-	ctx.assign_option("simple_option")
+	ctx.setoption("simple_option")
 
 

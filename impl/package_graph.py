@@ -257,8 +257,8 @@ class ModuleGraph():
 	def create_module(self, modkey, modpath):
 		return Module(modkey, modpath, self)
 
-	def create_locator(self):
-		return package_locator.ModuleLocator()
+	def create_locator(self, packages):
+		return package_locator.ModuleLocator(packages)
 
 	def create_configurator(self):
 		return package_config.Configurator(self.locator, self)
@@ -356,8 +356,6 @@ class ModuleGraph():
 				if me != None:
 					m.enabled = me
 
-
-
 	def print_info(self, print_key, print_sha, print_path):
 
 		for _,m in self.modules.items():
@@ -375,9 +373,23 @@ class ModuleGraph():
 
 
 	def configure(self, entrypoints):
+
+		packages = None
+
+		for e in entrypoints:
+			packages_path = package_locator.find_packages_json(os.path.abspath(e))
+			if packages_path == None:
+				continue
+
+			package_utils.display_status(f"USING [{packages_path}]")
+
+			f = open(packages_path)
+			packages = json.load(f)
+			f.close()
+			break
 		
 		if self.locator == None:
-			self.locator = self.create_locator()
+			self.locator = self.create_locator(packages)
 
 		if self.configurator == None:
 			self.configurator = self.create_configurator()
