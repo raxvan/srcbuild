@@ -91,7 +91,6 @@ class PackageConstructor():
 
 	###############################################################################
 	# property setters
-	def assign(self, pkey, pvalue = None):
 		tags, key = package_utils._parse_key(pkey)
 
 		prop_entry = self._props.get(key, None)
@@ -106,7 +105,7 @@ class PackageConstructor():
 
 		return prop_entry
 
-	def assign_config_option(self, pkey, pvalue = None):
+	def setoption(self, pkey, pvalue = None):
 		tags, key = package_utils._parse_key(pkey)
 
 		opt = self._config._options.get(key, None)
@@ -114,11 +113,11 @@ class PackageConstructor():
 			raise Exception(f"No configuratin found with name {key}")
 
 		if pvalue == None:
-			prop = self.assign(pkey, opt.get_value())
+			prop = self.set(pkey, opt.get_value())
 			prop.join_tags(opt.tags)
 			return prop
 		elif opt.allow_value(pvalue) == True:
-			prop = self.assign(pkey, pvalue)
+			prop = self.set(pkey, pvalue)
 			prop.join_tags(opt.tags)
 			return prop
 		else:

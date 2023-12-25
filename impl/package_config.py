@@ -82,11 +82,9 @@ class Configurator():
 		self.solver = solver
 		self.graph = graph
 
-
-
 		self._components = {}
 		self._options = {}
-
+		
 	def _configure_module_recursive(self, module):
 		current_link = self.active_module
 		self.active_module = module
@@ -138,8 +136,11 @@ class Configurator():
 			self._configure_module_recursive(link.module)
 		return link
 
-	def link_optional(self, child_info):
-		# links child to current module (parent) if the child exists and it's enabled
+	def trylink(self, child_info):
+		# links child to current module (parent) if:
+		#	1 module exists
+		#	2 module is enabled
+		
 		tags, path = package_utils._parse_key(child_info)
 		abs_module_path = self.solver.try_resolve_module(self.active_module, path, tags)
 		if abs_module_path == None:
@@ -152,28 +153,6 @@ class Configurator():
 		if link.module.configured == False:
 			self._configure_module_recursive(link.module)
 		return link
-
-	#def link_optional(self, child_info):
-	#	# links child to current module (parent)
-	#	tags, path = package_utils._parse_key(child_info)
-	#	abs_module_path = self.solver.try_resolve_path(self.active_module, path, tags)
-	#	if abs_module_path == None:
-	#		return None
-	#		
-	#	if not os.path.exists(abs_module_path):
-	#		return None
-    #
-	#	modkey = self._safe_modkey(abs_module_path)
-	#	current_module = self.graph.modules.get(modkey,None)
-	#	if current_module == None:
-	#		return None
-	#	if current_module.enabled == False:
-	#		return None
-    #
-	#	link = self.graph._create_link(self.active_module, modkey, abs_module_path, tags)
-	#	if link.module.configured == False:
-	#		self._configure_module_recursive(link.module)
-	#	return link
 
 	def option(self, k, default_value, possible_values = None):
 		tags, kv = package_utils._parse_key(k)

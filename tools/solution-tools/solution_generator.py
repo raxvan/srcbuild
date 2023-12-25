@@ -76,6 +76,7 @@ class Solution(package_graph.ModuleGraph):
 		package_utils.display_status("GENERATING...")
 
 		#collect autogenerate
+		#TODO: REMOVE THIS:
 		autogenerate_map = {}
 		for mk, m in all_modules.items():
 			autogenerate_proc = m.get_proc("autogenerate")
@@ -83,7 +84,6 @@ class Solution(package_graph.ModuleGraph):
 				self.collect_autogenerate(m, autogenerate_map, autogenerate_proc())
 
 		self.run_autogenerate(autogenerate_map)
-
 		assets_ini = {}
 
 
@@ -95,16 +95,15 @@ class Solution(package_graph.ModuleGraph):
 				break;
 
 			m = self.modules[mk]
-			#if m.enabled == False:
-			#	print(f"> {m.get_name()}".ljust(16) + " -> not enabled ...")
-			#	continue
+			if m.enabled == False:
+				raise Exception(f"> {m.get_name()}".ljust(16) + " -> not enabled ...")
 			
 			m.content = self.create_constructor(m)
 
-			m.content.assign_config_option("builder")
-			m.content.assign_config_option("cppstd")
-			m.content.assign_config_option("type")
-			m.content.assign_config_option("warnings")
+			m.content.setoption("builder")
+			m.content.setoption("cppstd")
+			m.content.setoption("type")
+			m.content.setoption("warnings")
 
 
 			construct_proc = m.get_proc("construct")
@@ -115,9 +114,10 @@ class Solution(package_graph.ModuleGraph):
 
 			#save name for later use
 			if m.content.get_property_or_die("type").value == "exe":
-				m.content.assign("exe-name","_" + m.get_name())
+				m.content.set("exe-name","_" + m.get_name())
 
 			#get assets with relative path
+			#TODO: remove assets.ini creation
 			assets = list(set([p.path for p in m.content.query_files(["asset"])]))
 			for a in assets:
 				h,t = os.path.split(a)
@@ -125,7 +125,7 @@ class Solution(package_graph.ModuleGraph):
 					raise Exception("Duplicate asset foud: " + a)
 				assets_ini[t] = a
 
-			#save json files
+			#save json files with module contents
 			j = {}
 			m.serialize(j)
 			m.content.serialize(j)
@@ -150,6 +150,7 @@ def _import_generators():
 	return _this_dir
 
 def generate_premake_project(root_workspace, mg, solution_name, out_dir, config):
+	package_utils.display_status("RUNNING PREMAKE GENERATOR...")
 	_this_dir = _import_generators()
 
 	import generator_premake
@@ -160,6 +161,7 @@ def generate_premake_project(root_workspace, mg, solution_name, out_dir, config)
 	return mg
 
 def generate_cmake_project(root_workspace, mg, solution_name, out_dir, config):
+	package_utils.display_status("RUNNING CMAKE GENERATOR...")
 	_this_dir = _import_generators()
 
 	import generator_cmake
@@ -170,6 +172,7 @@ def generate_cmake_project(root_workspace, mg, solution_name, out_dir, config):
 	return mg
 
 def generate_zip_project(root_workspace, mg, solution_name, out_dir, config):
+	package_utils.display_status("RUNNING ZIP GENERATOR...")
 	_this_dir = _import_generators()
 
 	import generator_zip
@@ -186,7 +189,7 @@ def create_solution(root_workspace, path, target, force):
 	solution_name, out_dir, config = mg.generate(path)
 
 	builder = config.query_option_value("builder")
-
+	
 	if builder == "vs":
 		return generate_premake_project(root_workspace, mg, solution_name, out_dir, config)
 	elif builder == "cmake":

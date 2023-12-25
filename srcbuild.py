@@ -71,8 +71,6 @@ def main(args):
 	elif acc == "run":
 		main_run(args)
 
-
-
 if __name__ == '__main__':
 	user_arguments = sys.argv[1:]
 
@@ -97,15 +95,11 @@ if __name__ == '__main__':
 	build_parser.add_argument('path', help='Path to root module')
 	build_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
-	#discover_parser = subparsers.add_parser('discover', description='Discover all packages in workspace')
-	#discover_parser.set_defaults(action='discover')
-
 	run_parser = subparsers.add_parser('run', description='Run tasks')
 	run_parser.set_defaults(action='run')
 	run_parser.add_argument('-r', '--reconfigure', dest='reconfigure', action='store_true', help="Reconfigure.")
 	run_parser.add_argument('path', help='Path to root module')
 	#run_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
-
 
 	args = parser.parse_args(user_arguments)
 	if hasattr(args, 'action'):
