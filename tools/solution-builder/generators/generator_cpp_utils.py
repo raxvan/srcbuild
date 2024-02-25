@@ -15,8 +15,6 @@ def get_dependency_list(solution, pack, visited, scan_private):
 		if _dependency.get_name() in visited:
 			continue
 
-		#if d.content.get_property_or_die("type") == "view":
-		#	continue
 		if not scan_private and "private" in _dependency_metadata.tags:
 			continue
 
@@ -26,7 +24,6 @@ def get_dependency_list(solution, pack, visited, scan_private):
 	return next_queue
 
 def query_include_paths(solution, root_project):
-
 	visited_projects = set([root_project.get_name()])
 	query_queue = [root_project]
 
@@ -126,3 +123,12 @@ def query_extra_libs(solution, root_project):
 		index = index + 1
 		
 	return list(set([p.path for p in result]))
+
+def is_cpp_compilable(m):
+	t = m.get_type()
+	if t == "exe":
+		return True
+	if t == "lib":
+		return True
+
+	return False

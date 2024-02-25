@@ -34,6 +34,8 @@ class Module(package_utils.PackageEntry):
 		self.key = modkey #search key
 		self.sha = s #content sha
 
+		self.rawtype = None
+
 		self._abs_pipeline_path = abs_pipeline_path
 		self._abs_pipeline_dir, self._pipeline_filename = os.path.split(abs_pipeline_path)
 
@@ -55,7 +57,7 @@ class Module(package_utils.PackageEntry):
 		
 		return dep
 
-	def serialize(self, out):
+	def serialize(self):
 		modinfo = {}
 		modinfo["name"] = self.get_name()
 
@@ -73,7 +75,7 @@ class Module(package_utils.PackageEntry):
 			}
 		modinfo["links"] = links
 
-		out["module"] = modinfo
+		return modinfo
 
 	def get_name(self):
 		return self._name
@@ -101,7 +103,14 @@ class Module(package_utils.PackageEntry):
 		except:
 			raise
 
-	
+	def get_type(self):
+		return self.rawtype
+
+	def set_type(self, type_value):
+		self.rawtype = type_value
+
+	def set_tags(self, tags):
+		self.join_tags(tags)
 
 	def print_info(self, print_key, print_sha, print_path):
 		m = "- "
@@ -215,6 +224,22 @@ class ModuleGraph():
 		self.configurator = None
 		self.locator = None
 
+		self.printer = package_utils.DefaultPackagePrinter()
+
+	def make_log_silent(self):
+		r = package_utils.EmptyPackagePrinter()
+		self.printer = r
+		return r
+
+	def make_log_lazy(self, output):
+		r = package_utils.LoggingPackagePrinter(output)
+		self.printer = r
+		return r
+
+	def make_log_custom(self, clog):
+		self.printer = clog
+
+
 	def _create_new_module(self, modkey, abs_module_path):
 		module = self.create_and_validate_module(modkey, abs_module_path)
 		self.modules[modkey] = module
@@ -285,8 +310,10 @@ class ModuleGraph():
 	#################################################################################################
 	#utils:
 	def build(self, root_modules_list):
-		
-		package_utils.display_status("RUNNING FORWARD DISABLE...")
+
+		prp = self.printer
+
+		prp.print_header("RUNNING FORWARD DISABLE...")
 
 		while root_modules_list:
 
@@ -311,11 +338,11 @@ class ModuleGraph():
 
 						if disable == True:
 							child_module.enabled = False
-							print("\t-" + child_module.get_name())
+							prp.print_progress("\t-" + child_module.get_name())
 
 			root_modules_list = next_root_modules_list
 
-		package_utils.display_status("GENERATING ITERATOR...")
+		prp.print_header("GENERATING ITERATOR...")
 
 		counters = {}
 		links = {}
@@ -323,7 +350,7 @@ class ModuleGraph():
 
 		for mk, m in self.modules.items():
 			if m.enabled == False:
-				print(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled!")
+				prp.print_progress(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled!")
 				continue
 			
 			child_count = 0
@@ -343,13 +370,13 @@ class ModuleGraph():
 			else:
 				counters[mk] = child_count
 
-			print(f"> {m.get_name()}".ljust(32) + f" -> OK: order={child_count}")
+			prp.print_progress(f"> {m.get_name()}".ljust(32) + f" -> OK: order={child_count}")
 
 		return GraphIterator(counters, links, stack)
 
 
-	def sync_config(self, abs_path_to_config_ini, override):
-		user_modules = self.configurator._sync_config(self, abs_path_to_config_ini, override)
+	def sync_config(self, abs_path_to_config_ini, override_config):
+		user_modules = self.configurator._sync_config(self, abs_path_to_config_ini, override_config)
 		if user_modules != None:
 			for _,m in self.modules.items():
 				me = user_modules.get(m.get_name(), None)
@@ -373,7 +400,6 @@ class ModuleGraph():
 
 
 	def configure(self, entrypoints):
-
 		packages = None
 
 		for e in entrypoints:
@@ -381,7 +407,7 @@ class ModuleGraph():
 			if packages_path == None:
 				continue
 
-			package_utils.display_status(f"USING [{packages_path}]")
+			self.printer.print_key_value("Config", packages_path)
 
 			f = open(packages_path)
 			packages = json.load(f)
@@ -395,7 +421,7 @@ class ModuleGraph():
 			self.configurator = self.create_configurator()
 
 
-		package_utils.display_status("CONFIGURING...")
+		self.printer.print_header("CONFIGURING...")
 
 		result = []
 
@@ -409,7 +435,7 @@ class ModuleGraph():
 
 		self.link_graph()
 
-		return self.configurator, result
+		return result
 
 	def link_graph(self):
 

@@ -5,6 +5,7 @@ def configure(ctx):
 
 
 def construct(ctx):
-	pass
+	#should be disabled by forward disable
+	assert(False)
 
 

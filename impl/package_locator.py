@@ -6,7 +6,7 @@ def find_packages_json(start_search_dir):
 	current_dir = start_search_dir
 
 	while current_dir != os.path.abspath(os.sep):
-		package_json_path = os.path.join(current_dir, '#packages.json')
+		package_json_path = os.path.join(current_dir, ".wspace", 'modules.json')
 
 		if os.path.exists(package_json_path):
 			return package_json_path

@@ -2,11 +2,13 @@
 import os
 import hashlib
 
+def _split_tags(tags_str):
+	return [t.strip() for t in tags_str.replace(" ",",").split(",")]
 
 def _parse_key_value(left, right):
-		name = right.strip()
-		tags = [t.strip() for t in left.replace(" ",",").split(",")]
-		return (tags, name)
+	tags = _split_tags(left)
+	name = right.strip()
+	return (tags, name)
 
 def _parse_key(name):
 	if "|" in name:
@@ -26,10 +28,10 @@ def save_json(j, abs_output_file):
 	with open(abs_output_file, "w") as outfile:
 		outfile.write(json.dumps(j, indent=1, sort_keys=True))
 
-def save_assets_ini(data, abs_folder_location):
-	with open(os.path.join(abs_folder_location,"assets"), "w") as outfile:
+def save_ini_map(data, abs_file_name):
+	with open(abs_file_name, "w") as outfile:
 		for k,v in data.items():
-			outfile.write(k + "=" + str(os.path.relpath(v, abs_folder_location)) + "\n")
+			outfile.write(f"{k}={v}\n")
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -63,6 +65,9 @@ class PackageEntry():
 	#def check_subtags_set(self, tags_set):
 	#	return tags_set.issubset(self.tags)
 	#
+
+	def get_joined_tags_string(self):
+		return ",".join(list(self.tags).sorted())
 
 	def get_tags_str(self, suffix):
 		if self.tags:
@@ -104,6 +109,15 @@ class PeropertyEntry(PackageEntry):
 		PackageEntry.__init__(self, tags)
 
 		self.value = value
+
+	def serialize(self):
+		if (self.tags):
+			return {
+				"data" : v.value,
+				"tags" : sorted(list(v.tags))
+			}
+		else:
+			return v.value
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -158,10 +172,74 @@ class Colors:
 			kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 			del kernel32
 
+#--------------------------------------------------------------------------------------------------------------------------------
 
-def display_status(step_msg):
-	print(Colors.DARK_GRAY + "-" * 32 + "\n" + Colors.LIGHT_GRAY + step_msg + Colors.END)
+class EmptyPackagePrinter():
+	def __init__(self):
+		pass
 
+	def print_key_value(self, message, package_path):
+		pass
+
+	def print_header(self, status_msg):
+		pass
+
+	def print_status(self, status_msg):
+		pass
+
+
+	def print_progress(self, progress_msg):
+		pass
 
 #--------------------------------------------------------------------------------------------------------------------------------
+
+class LoggingPackagePrinter():
+	def __init__(self, default_output):
+		self.output = default_output
+
+	def print_key_value(self, message, package_path):
+		if self.output != None:
+			self.output.append(f"{message}={package_path}")
+
+	def print_header(self, status_msg):
+		if self.output != None:
+			self.output.append(status_msg)
+
+	def print_status(self, status_msg):
+		if self.output != None:
+			self.output.append(status_msg)
+
+
+	def print_progress(self, progress_msg):
+		if self.output != None:
+			self.output.append(progress_msg)
+
+	def print_failed_progress(self, progress_msg, fail_msg):
+		if self.output != None:
+			self.output.append(progress_msg + fail_msg)
+
 #--------------------------------------------------------------------------------------------------------------------------------
+
+class DefaultPackagePrinter():
+	def __init__(self):
+		pass
+
+	def print_key_value(self, message, package_path):
+		print(f"{message}={package_path}")
+		pass
+
+	def print_header(self, status_msg):
+		print(Colors.DARK_GRAY + "-" * 32 + "\n" + Colors.LIGHT_GREEN + status_msg + Colors.END)
+		pass
+
+	def print_status(self, status_msg):
+		print(f"{Colors.YELLOW}{status_msg}{Colors.END}" )
+
+
+	def print_progress(self, progress_msg):
+		print(f"{Colors.BOLD}{progress_msg}{Colors.END}" )
+
+	def print_failed_progress(self, progress_msg, fail_msg):
+		print(f"{Colors.LIGHT_GRAY}{progress_msg}{Colors.END}{Colors.LIGHT_RED}{fail_msg}{Colors.END}" )
+
+

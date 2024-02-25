@@ -18,6 +18,8 @@ class PackageConstructor():
 		self._files = []
 		self._folders = []
 
+		self._props["_type"] = package_utils.PeropertyEntry(module.get_type(), None)
+
 	###############################################################################
 	# file scanning:
 
@@ -77,7 +79,6 @@ class PackageConstructor():
 			raise Exception(f"Component {component_name} was not found!")
 		return c.enabled
 
-
 	def module(self, modname):
 		return self._graph.get_module(modname)
 
@@ -91,6 +92,7 @@ class PackageConstructor():
 
 	###############################################################################
 	# property setters
+	def set(self, pkey, pvalue = None):
 		tags, key = package_utils._parse_key(pkey)
 
 		prop_entry = self._props.get(key, None)
@@ -106,6 +108,7 @@ class PackageConstructor():
 		return prop_entry
 
 	def setoption(self, pkey, pvalue = None):
+		#puts option from config to module
 		tags, key = package_utils._parse_key(pkey)
 
 		opt = self._config._options.get(key, None)
@@ -192,7 +195,7 @@ class PackageConstructor():
 
 		return result
 
-	def serialize(self, data):
+	def serialize(self):
 		props = {}
 		files = {}
 		folders = {}
@@ -211,7 +214,7 @@ class PackageConstructor():
 			e = self._paths[f]
 			folders[f] = sorted(list(e.tags))
 
-		data["content"] = {
+		return {
 			"files" : files,
 			"folders" : folders,
 			"props" : props,
@@ -224,7 +227,7 @@ class PackageConstructor():
 		folders = content['folders']
 
 		for k, v in props.items():
-			prop_entry = package_utils.PeropertyEntry(v['data'], v['tags'])
+			prop_entry = package_utils.PeropertyEntry(v['data'], v.get('tags',None))
 			self._props[k] = prop_entry
 
 		for k, v in files.items():

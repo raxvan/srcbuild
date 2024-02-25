@@ -6,4 +6,5 @@ def configure(ctx):
 	ctx.link("simple_option.pak.py")
 
 def construct(ctx):
-	pass
+	assert(ctx.module_enabled("disabled.pak.py") == False)
+

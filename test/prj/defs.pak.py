@@ -1,9 +1,8 @@
 
-
-def construct(ctx):
+def configure(cfg):
+	cfg.type("exe")
 	
-	ctx.assign_config_option("type","exe")
-
+def construct(ctx):
 	ctx.fscan("src: ../src")
 	
 

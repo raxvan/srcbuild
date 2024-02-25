@@ -18,11 +18,11 @@ def main_info(args):
 
 	mg = package_graph.ModuleGraph()
 
-	cfg, root_modules = mg.configure([path])
+	root_modules = mg.configure([path])
 
 	mg.build(root_modules)
 
-	package_utils.display_status("DONE.")
+	mg.printer.print_status("DONE.")
 
 	print("\n>MODULES:")
 
@@ -35,41 +35,44 @@ def main_info(args):
 		mg.print_links_shallow()
 
 
-	if cfg != None:
+	if mg.configurator != None:
 		print(">CONFIG:")
-		print(cfg._get_config_ini(mg))
+		print(mg.configurator._get_config_ini(mg))
 
 def main_build(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"tools","solution-tools"))
+	sys.path.append(os.path.join(_this_dir,"tools","solution-builder"))
 
-	import solution_generator
-
-	target = args.target
 	path = args.path
 	force = args.force
 
-	solution_generator.create_solution("/wspace/workspace", path, target, force)
+	builder_list = args.builders
+	
+	import solution_builder
+	solution_builder.build("/wspace/workspace", path, force, builder_list)
 
-def main_run(args):
+def main_version(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"tools","pipeline-tools"))
+	sys.path.append(os.path.join(_this_dir,"tools","versioning"))
 
-	import pipeline_executor
-	pipeline_executor.run_pipeline(args.path, args.reconfigure)
+	path = args.path
+
+	import package_versioning
+
+	v = package_versioning.get_version(path)
+	print(v)
 
 def main(args):
-
 	acc = args.action
 
-	if acc == "info":
+	if acc == "build":
+		main_build(args)
+	elif acc == "version":
+		main_version(args)
+	elif acc == "info":
 		main_info(args)
 
-	elif acc == "build":
-		main_build(args)
-
-	elif acc == "run":
-		main_run(args)
+	
 
 if __name__ == '__main__':
 	user_arguments = sys.argv[1:]
@@ -88,18 +91,15 @@ if __name__ == '__main__':
 	info_parser.add_argument('path', help='Path to module to inspect')
 	info_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
 
-	build_parser = subparsers.add_parser('build', description='Generate c++ solutions.')
+	build_parser = subparsers.add_parser('build', description='Runs a builder bundle on module')
 	build_parser.set_defaults(action='build')
 	build_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate config.ini from build folder.")
-	build_parser.add_argument('target', choices=['vs', 'cmake', 'zip'], help='Which builder to use.')
 	build_parser.add_argument('path', help='Path to root module')
-	build_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+	build_parser.add_argument('builders', nargs='+', help='List of builders separated by spaces, in order!')
 
-	run_parser = subparsers.add_parser('run', description='Run tasks')
-	run_parser.set_defaults(action='run')
-	run_parser.add_argument('-r', '--reconfigure', dest='reconfigure', action='store_true', help="Reconfigure.")
-	run_parser.add_argument('path', help='Path to root module')
-	#run_parser.add_argument('forward_arguments', nargs=argparse.REMAINDER)
+	version_parser = subparsers.add_parser('version', description='Version tool for packages')
+	version_parser.set_defaults(action='version')
+	version_parser.add_argument('path', help='Path to root module')
 
 	args = parser.parse_args(user_arguments)
 	if hasattr(args, 'action'):
