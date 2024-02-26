@@ -1,10 +1,11 @@
 
 import os
 import json
+import package_utils
 import package_graph
 import package_config
 import package_constructor
-import package_utils
+import srcbuild_default_paths
 
 
 def _filter_builder_with_function(builders, search_function):
@@ -45,13 +46,6 @@ class Solution(package_graph.ModuleGraph):
 		self.modules_folder = None
 
 		self.builders = builders
-		
-		#self.module_constructors = _get_builder_function(builders, "construct_module")
-		#self.configurators = _filter_builder_with_function(builders, "configure")
-		#self.prebuilders = _filter_builder_with_function(builders, "prebuild") #called 
-		#self.preparers = _filter_builder_with_function(builders, "prepare")
-		#self.builders = _filter_builder_with_function(builders, "build")
-		#self.postbuilders = _filter_builder_with_function(builders, "postbuild")
 
 	def create_configurator(self):
 		cfg = package_graph.ModuleGraph.create_configurator(self)
@@ -72,9 +66,11 @@ class Solution(package_graph.ModuleGraph):
 
 		for m in self.get_modules():
 			if m.enabled == False:
-				self.printer.print_progress(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled!")
+				self.printer.print_progress(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled.")
 				continue
         
+			m.content = self.create_constructor(m)
+
 			for b in self.builders:
 				if b.accept(self, m):
 					m.builders.append(b)
@@ -82,13 +78,11 @@ class Solution(package_graph.ModuleGraph):
 			if m.builders:
 				self.printer.print_progress(f"> {m.get_name()}".ljust(32) + f" -> ACCEPTED: " + " ".join(map(str, m.builders)))
 			else:
-				self.printer.print_progress(f"> {m.get_name()}".ljust(32) + f" -> SKIPPING: no interested builders!")
+				self.printer.print_progress(f"> {m.get_name()}".ljust(32) + f" -> SKIPPING: no interested builders.")
 
 	def _build_module(self, m):
 		module_json = os.path.join(self.modules_folder, m.get_name() + ".json")
-
-		m.content = self.create_constructor(m)
-
+		
 		if m.builders:
 			#run construct
 			construct_proc = m.get_proc("construct")
@@ -106,6 +100,7 @@ class Solution(package_graph.ModuleGraph):
 			jout["content"] = m.content.serialize()
 			
 			#save contents to json file
+
 			package_utils.save_json(jout, module_json)
 
 			builders_msg = " ".join(map(str, m.builders))
@@ -120,14 +115,15 @@ class Solution(package_graph.ModuleGraph):
 				
 				self.printer.print_progress(f"> {m.get_name()}".ljust(32) + f" -> OK <from cache>")
 			except Exception as e:
-				self.printer.print_failed_progress(f"> {m.get_name()}".ljust(32) + "-> ", f"FAILED!")
-				self.printer.print_failed_progress(f"Check {module_json}","")
+				self.printer.print_failed_progress(f"> {m.get_name()}".ljust(32) + "-> ", f"FAILED: module was never built or it's corrupted ...")
+				self.printer.print_failed_progress(f"Investigate cache file: `{module_json}`","")
 				raise
 			
 
 	def _postbuild(self):
 		self.printer.print_header("POST-BUILD...")
 		for b in self.builders:
+			self.printer.print_progress(f"> {str(b)}")
 			b.postbuild(self)
 
 	def construct_from_path(self, path, override_config):
@@ -141,14 +137,15 @@ class Solution(package_graph.ModuleGraph):
 
 		self.name = root_module.get_name()
 		self.output = output
-		self.modules_folder = os.path.join(self.output, "modules")
 
-		if not os.path.exists(self.output):
-			os.makedirs(self.output)
+		self.modules_folder = srcbuild_default_paths.get_build_modules_data(output)
+
+		if not os.path.exists(output):
+			os.makedirs(output)
 		if not os.path.exists(self.modules_folder):
 			os.makedirs(self.modules_folder)
 
-		self.sync_config(os.path.join(output, "config.ini"), override_config)
+		self.sync_config(srcbuild_default_paths.get_build_config_init(output), override_config)
 
 		#running prebuild:
 		self._prebuild()
@@ -158,12 +155,9 @@ class Solution(package_graph.ModuleGraph):
 
 		self.printer.print_header("BUILDING...")
 
-		while True:
+		while itr.count > 0:
 
 			mk = itr.begin()
-			if mk == None:
-				#completed
-				break
 
 			m = self.modules[mk]
 			if m.enabled == False:

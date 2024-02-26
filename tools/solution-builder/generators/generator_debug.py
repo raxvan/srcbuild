@@ -26,9 +26,11 @@ class DebugContext(generator_utils.GeneratorInterface):
 		return True
 		
 	def build(self, solution, module, jout):
+		#called only if accept() returns true
 		print(f"{clrs.LIGHT_RED}[DEBUG]{clrs.END} <build:{module.get_name()}>")
 
 	def postbuild(self, solution):
+		#called regardless of accept() result
 		print(f"{clrs.LIGHT_RED}[DEBUG]{clrs.END} <postbuild>")
 
 			

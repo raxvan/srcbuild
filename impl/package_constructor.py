@@ -18,8 +18,6 @@ class PackageConstructor():
 		self._files = []
 		self._folders = []
 
-		self._props["_type"] = package_utils.PeropertyEntry(module.get_type(), None)
-
 	###############################################################################
 	# file scanning:
 
@@ -89,6 +87,9 @@ class PackageConstructor():
 		if module.key in self._module.links:
 			return module
 		return None
+
+	def get_rawtype(self):
+		return self._module.rawtype
 
 	###############################################################################
 	# property setters
@@ -177,6 +178,9 @@ class PackageConstructor():
 
 		return result
 
+	def query_all_files(self):
+		return self._files
+
 	def get_property_or_die(self, pk):
 		p = self._props.get(pk, None)
 		if p == None:
@@ -201,18 +205,15 @@ class PackageConstructor():
 		folders = {}
 
 		for p,v in self._props.items():
-			props[p] = {
-				"data" : v.value,
-				"tags" : sorted(list(v.tags))
-			}
+			props[p] = v.serialize()
 
 		for f in self._files:
 			e = self._paths[f]
-			files[f] = sorted(list(e.tags))
+			files[f] = v.packed_tags()
 
 		for f in self._folders:
 			e = self._paths[f]
-			folders[f] = sorted(list(e.tags))
+			folders[f] = v.packed_tags()
 
 		return {
 			"files" : files,
@@ -227,8 +228,7 @@ class PackageConstructor():
 		folders = content['folders']
 
 		for k, v in props.items():
-			prop_entry = package_utils.PeropertyEntry(v['data'], v.get('tags',None))
-			self._props[k] = prop_entry
+			self._props[k] = package_utils.deserializePeropertyEntry(v)
 
 		for k, v in files.items():
 			apath, entry = self._add_path_internal(k, package_utils.FileEntry, v)

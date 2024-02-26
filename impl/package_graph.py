@@ -32,7 +32,7 @@ class Module(package_utils.PackageEntry):
 		self.pipeline = p
 
 		self.key = modkey #search key
-		self.sha = s #content sha
+		self.sha = s # the .pak.py contents sha
 
 		self.rawtype = None
 
@@ -60,7 +60,7 @@ class Module(package_utils.PackageEntry):
 	def serialize(self):
 		modinfo = {}
 		modinfo["name"] = self.get_name()
-
+		modinfo["type"] = self.rawtype
 		modinfo["enabled"] = self.enabled
 		modinfo["configured"] = self.configured
 		modinfo["key"] = self.key
@@ -69,10 +69,8 @@ class Module(package_utils.PackageEntry):
 
 		links = {}
 		for lk,ld in self.links.items():
-			links[lk] = {
-				"path" : ld.path,
-				"tags" : list(ld.tags),
-			}
+			links[lk] = ld.serialize()
+
 		modinfo["links"] = links
 
 		return modinfo
@@ -182,19 +180,29 @@ class Module(package_utils.PackageEntry):
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class GraphIterator():
-	def __init__(self, counters, links, stack):
+	def __init__(self, elements, counters, links, stack):
+		self.count = elements
 		self.stack = stack
 		self.counters = counters
 		self.links = links
 
-	def begin(self):
 
+	def begin(self):
 		if self.stack:
 			r = self.stack.pop()
 			return r
 		return None
 
+	def begin_array(self):
+		if self.count == 0:
+			return None
+
+		r = self.stack
+		self.stack = []
+		return r
+
 	def end(self, r):
+		self.count -= 1
 		parent_lins = self.links.get(r, None)
 		if  parent_lins == None:
 			return
@@ -206,6 +214,8 @@ class GraphIterator():
 				self.stack.append(link)
 			else:
 				self.counters[link] = c
+
+
 
 
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -344,15 +354,17 @@ class ModuleGraph():
 
 		prp.print_header("GENERATING ITERATOR...")
 
+		count = 0
 		counters = {}
 		links = {}
 		stack = []
 
 		for mk, m in self.modules.items():
 			if m.enabled == False:
-				prp.print_progress(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled!")
+				prp.print_progress(f"> {m.get_name()}".ljust(32) + " -> SKIPPING: not enabled.")
 				continue
 			
+			count += 1			
 			child_count = 0
 
 			children_list = self.forward_links.get(mk,None)
@@ -370,9 +382,9 @@ class ModuleGraph():
 			else:
 				counters[mk] = child_count
 
-			prp.print_progress(f"> {m.get_name()}".ljust(32) + f" -> OK: order={child_count}")
+			prp.print_progress(f"> {m.get_name()}".ljust(32) + f" -> OK <order={child_count}>")
 
-		return GraphIterator(counters, links, stack)
+		return GraphIterator(count, counters, links, stack)
 
 
 	def sync_config(self, abs_path_to_config_ini, override_config):
@@ -419,7 +431,6 @@ class ModuleGraph():
 
 		if self.configurator == None:
 			self.configurator = self.create_configurator()
-
 
 		self.printer.print_header("CONFIGURING...")
 

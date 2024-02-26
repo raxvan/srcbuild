@@ -49,6 +49,14 @@ class PackageEntry():
 	def __init__(self, utag = None):
 		self.tags = make_tags(utag)
 
+	def packed_tags(self):
+		lt = len(self.tags)
+		if lt > 1:
+			return list(self.tags)
+		elif lt == 1:
+			return self.tags[0]
+		return []
+
 	def join_tags(self, utag):
 		if utag != None:
 			if isinstance(utag, str):
@@ -59,13 +67,6 @@ class PackageEntry():
 				self.tags = self.tags.union(utag)
 		return self
 
-	#def query_tags(self, tags_set):
-	#	return set(tags_set).issubset(self.tags)
-	#
-	#def check_subtags_set(self, tags_set):
-	#	return tags_set.issubset(self.tags)
-	#
-
 	def get_joined_tags_string(self):
 		return ",".join(list(self.tags).sorted())
 
@@ -74,6 +75,20 @@ class PackageEntry():
 			return suffix + "[" + ",".join(list(self.tags)) + "]"
 		return ""
 
+	def serializeWithValue(self, value):
+		if self.tags:
+			return {
+				"val" : value,
+				"tag" : self.packed_tags()
+			}
+		else:
+			return value
+
+def deserializeValueTagsPair(svalue):
+	if isinstance(svalue, dict):
+		return svalue['val'], svalue['tag']
+	
+	return svalue['val'], None
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class PathEntry(PackageEntry):
@@ -81,9 +96,11 @@ class PathEntry(PackageEntry):
 		PackageEntry.__init__(self, tags)
 		self.path = path
 
-
 	def get_path_relative_to(self, p):
 		return os.path.relpath(self.get_abs_path(),p)
+
+	def serialize(self):
+		return self.serializeWithValue(self.path)
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,13 +128,12 @@ class PeropertyEntry(PackageEntry):
 		self.value = value
 
 	def serialize(self):
-		if (self.tags):
-			return {
-				"data" : v.value,
-				"tags" : sorted(list(v.tags))
-			}
-		else:
-			return v.value
+		return self.serializeWithValue(self.value)
+
+def deserializePeropertyEntry(svalue):
+	v, t = deserializeValueTagsPair(svalue)
+	return PeropertyEntry(v, t)
+
 
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -129,6 +145,14 @@ class FileEntry(PathEntry):
 class FolderEntry(PathEntry):
 	def __init__(self, path, tags):
 		PathEntry.__init__(self, path, tags)
+
+def deserializeFileEntry(svalue):
+	v, t = deserializeValueTagsPair(svalue)
+	return FileEntry(v, t)
+
+def deserializeFolderEntry(svalue):
+	v, t = deserializeValueTagsPair(svalue)
+	return FolderEntry(v, t)
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------------------------------

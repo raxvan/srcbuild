@@ -22,7 +22,9 @@ def discover_buidlers():
 	_generators_dir = _add_generators_import()
 	return {
 		"debug" : os.path.join(_generators_dir, "generator_debug.py"),
+		"stamps" : os.path.join(_generators_dir, "generator_stamps.py"),
 		"cmake" : os.path.join(_generators_dir, "generator_cmake.py"),
+		
 	}
 
 def import_builder_stack(root_workspace, builder_stack):

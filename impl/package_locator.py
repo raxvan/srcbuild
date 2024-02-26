@@ -2,14 +2,19 @@
 import os
 import json
 
+import srcbuild_default_paths
+
 def find_packages_json(start_search_dir):
 	current_dir = start_search_dir
 
+	modules_folder = srcbuild_default_paths.default_modules_folder
+	index_filename = srcbuild_default_paths.default_index_filename
 	while current_dir != os.path.abspath(os.sep):
-		package_json_path = os.path.join(current_dir, ".wspace", 'modules.json')
 
-		if os.path.exists(package_json_path):
-			return package_json_path
+		index_json_path = os.path.join(current_dir, modules_folder, index_filename)
+
+		if os.path.exists(index_json_path):
+			return index_json_path
 
 		current_dir = os.path.dirname(current_dir)
 

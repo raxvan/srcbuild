@@ -21,8 +21,8 @@ def _get_cpp_standard(item):
 
 def _get_project_name(item):
 	fixed_name = item.get_name()
-	n = item.content.get_property("_type")
-	if n != None and n.value == "exe":
+	n = item.content.get_rawtype()
+	if n == "exe":
 		return "_" + fixed_name
 	return fixed_name
 
@@ -102,7 +102,7 @@ class CmakeContext(generator_utils.GeneratorInterface):
 
 		target_build_folder = solution.output
 
-		itype = item.content.get_property_or_die("_type").value
+		itype = item.content.get_rawtype()
 		name =  _get_project_name(item)
 		replacemap = {
 			"__NAME__" : name,

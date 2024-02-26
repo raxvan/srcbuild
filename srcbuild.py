@@ -6,11 +6,12 @@ import argparse
 
 _this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(_this_dir,"impl"))
-sys.path.append(os.path.join(_this_dir,"tools","pytools"))
+sys.path.append(os.path.join(_this_dir,"config"))
 
 import package_graph
 import package_config
 import package_utils
+import srcbuild_default_paths
 
 def main_info(args):
 	path = os.path.abspath(args.path)
@@ -49,26 +50,23 @@ def main_build(args):
 	builder_list = args.builders
 	
 	import solution_builder
-	solution_builder.build("/wspace/workspace", path, force, builder_list)
+	solution_builder.build(srcbuild_default_paths.default_workspace, path, force, builder_list)
 
-def main_version(args):
+def main_scan(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"tools","versioning"))
+	sys.path.append(os.path.join(_this_dir,"tools","scanner"))
 
-	path = args.path
+	import package_scanner
 
-	import package_versioning
-
-	v = package_versioning.get_version(path)
-	print(v)
+	package_scanner.scan(srcbuild_default_paths.default_workspace, srcbuild_default_paths.default_workspace)
 
 def main(args):
 	acc = args.action
 
 	if acc == "build":
 		main_build(args)
-	elif acc == "version":
-		main_version(args)
+	elif acc == "scan":
+		main_scan(args)
 	elif acc == "info":
 		main_info(args)
 
@@ -97,9 +95,9 @@ if __name__ == '__main__':
 	build_parser.add_argument('path', help='Path to root module')
 	build_parser.add_argument('builders', nargs='+', help='List of builders separated by spaces, in order!')
 
-	version_parser = subparsers.add_parser('version', description='Version tool for packages')
-	version_parser.set_defaults(action='version')
-	version_parser.add_argument('path', help='Path to root module')
+	scan_parser = subparsers.add_parser('scan', description='Scan for modules.')
+	scan_parser.set_defaults(action='scan')
+	
 
 	args = parser.parse_args(user_arguments)
 	if hasattr(args, 'action'):
