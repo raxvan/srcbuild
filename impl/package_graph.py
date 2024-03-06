@@ -8,6 +8,7 @@ import package_utils
 import package_config
 import package_constructor
 import package_locator
+import srcbuild_default_paths
 
 def _load_module(abs_path_to_pyfile, load_location):
 	ll = "modpak.sha." + load_location
@@ -36,11 +37,13 @@ class Module(package_utils.PackageEntry):
 
 		self.rawtype = None
 
-		self._abs_pipeline_path = abs_pipeline_path
-		self._abs_pipeline_dir, self._pipeline_filename = os.path.split(abs_pipeline_path)
+		pi = srcbuild_default_paths.get_pack_info(abs_pipeline_path)
 
-		self._name = self._pipeline_filename.replace(".pak.py","")
-		self._simplified_name = self._name #self._name.replace(".","_").replace("-","_").lower()
+		self._abs_pipeline_path = abs_pipeline_path
+		self._abs_pipeline_dir = pi[0]
+		self._pipeline_filename = pi[1]
+		self._name = pi[2]
+		self._simplified_name = pi[3]
 
 		self.links = {} #key==modkey, value==ModuleLink
 		#^ children

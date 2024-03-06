@@ -132,8 +132,7 @@ class Solution(package_graph.ModuleGraph):
 
 		root_module = root_modules[0]
 
-		output = os.path.join(root_module.get_package_dir(), "build", root_module.get_simplified_name())
-		output = os.path.abspath(output)
+		output = srcbuild_default_paths.get_build_folder(root_module.get_package_absolute_path())
 
 		self.name = root_module.get_name()
 		self.output = output

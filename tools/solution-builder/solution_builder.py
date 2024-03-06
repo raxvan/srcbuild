@@ -15,7 +15,9 @@ def _load_module(abs_path_to_pyfile, load_location):
 def _add_generators_import():
 	_gdir = os.path.dirname(os.path.abspath(__file__))
 	_gdir = os.path.join(_gdir,"generators")
+	_gimpldir = os.path.join(_gdir, "impl")
 	sys.path.append(_gdir)
+	sys.path.append(_gimpldir)
 	return _gdir
 
 def discover_buidlers():
@@ -57,3 +59,5 @@ def build(root_workspace, path, force, builder_stack):
 	sol = solution.Solution(builders)
 
 	sol.construct_from_path(os.path.abspath(path), force)
+
+	return sol.output

@@ -41,7 +41,9 @@ def _scan_folder_structure(root_path):
 			
 	return packages
 
-	
+
+
+
 def discover_local_packages(scan_location, destination_folder):
 	packs = _scan_folder_structure(scan_location)
 
@@ -50,8 +52,8 @@ def discover_local_packages(scan_location, destination_folder):
 	if not os.path.exists(final_modules_folder):
 		os.makedirs(final_modules_folder)
 
+	#index file
 	local_modules_file = os.path.join(final_modules_folder, srcbuild_default_paths.default_index_filename)
-
 	content = {
 		"workspace" : scan_location,
 		"modules" : packs,
@@ -62,6 +64,7 @@ def discover_local_packages(scan_location, destination_folder):
 	f.close()
 
 	print(f"\nGenerated -> {local_modules_file}\n")
+
 
 def scan(scan_location, destination_folder):
 	discover_local_packages(scan_location, destination_folder);

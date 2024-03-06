@@ -25,8 +25,6 @@ def combine_hashes_and_compute_final_sha512(file_paths):
 def get_sha_from_stamps(stampfile):
 	combined_hash_string = ''
 
-	stampfile = os.path.join(_this_dir, stampfile);
-
 	with open(stampfile, 'r') as file:
 		file_count = int(file.readline().rstrip("\n"))
 		index = 1
@@ -45,7 +43,7 @@ def get_sha_from_stamps(stampfile):
 	return final_sha512
 
 def write_stamp(outdir, sha, value):
-	outdir = os.path.join(_this_dir, outdir)
+	
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
 
@@ -55,11 +53,22 @@ def write_stamp(outdir, sha, value):
 	f.write("\n")
 	f.close()
 
-infile = "./.srcbuild/stamps.txt"
-outdir = "./stamps"
-value = sys.argv[1]
+def make_stamp(stampstr):
+	infile = "./.srcbuild/solution-files.txt"
+	outdir = "./stamps"
 
-sha = get_sha_from_stamps(infile)
-write_stamp(outdir, sha, value)
-print(f"generated: {outdir}/{sha}")
+	infile = os.path.abspath(os.path.join(_this_dir, infile))
+	outdir = os.path.abspath(os.path.join(_this_dir, outdir))
+
+	sha = get_sha_from_stamps(infile)
+	write_stamp(outdir, sha, stampstr)
+
+	return f"{outdir}/{sha}"
+
+if __name__ == "__main__":
+	try:
+		file = make_stamp(sys.argv[1])
+		print(f"generated: {file}")
+	except:
+		print(f"Usage: python3 {__file__} STAMP_NAME")
 

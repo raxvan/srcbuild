@@ -40,6 +40,18 @@ def main_info(args):
 		print(">CONFIG:")
 		print(mg.configurator._get_config_ini(mg))
 
+def generate_rebuild_file(path, builders_list):
+	r = "\n"
+	this_script = os.path.join(_this_dir, __file__)
+	builders = " ".join(builders_list)
+	out = ""
+	out += f"#!/bin/bash{r}"
+	out += f"cd {os.getcwd()}{r}"
+	out += f"python3 {this_script} build {path} {builders}{r}"
+	out += f"cd -{r}"
+
+	return out
+
 def main_build(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
 	sys.path.append(os.path.join(_this_dir,"tools","solution-builder"))
@@ -50,7 +62,12 @@ def main_build(args):
 	builder_list = args.builders
 	
 	import solution_builder
-	solution_builder.build(srcbuild_default_paths.default_workspace, path, force, builder_list)
+	out = solution_builder.build(srcbuild_default_paths.default_workspace, path, force, builder_list)
+
+	rebuild = os.path.join(out, "_rebuild.sh")
+	with open(rebuild, "w") as f:
+		f.write(generate_rebuild_file(path, builder_list))
+		
 
 def main_scan(args):
 	_this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +75,20 @@ def main_scan(args):
 
 	import package_scanner
 
-	package_scanner.scan(srcbuild_default_paths.default_workspace, srcbuild_default_paths.default_workspace)
+	package_scanner.scan(
+		srcbuild_default_paths.default_workspace,
+		srcbuild_default_paths.default_workspace,
+	)
+
+def main_status(args):
+	_this_dir = os.path.dirname(os.path.abspath(__file__))
+	sys.path.append(os.path.join(_this_dir,"tools","stamps"))
+
+	import package_stamps
+
+	package_stamps.show_all(
+		srcbuild_default_paths.default_workspace,
+	)
 
 def main(args):
 	acc = args.action
@@ -69,7 +99,8 @@ def main(args):
 		main_scan(args)
 	elif acc == "info":
 		main_info(args)
-
+	elif acc == "status":
+		main_status(args)
 	
 
 if __name__ == '__main__':
@@ -97,6 +128,9 @@ if __name__ == '__main__':
 
 	scan_parser = subparsers.add_parser('scan', description='Scan for modules.')
 	scan_parser.set_defaults(action='scan')
+	
+	status_parser = subparsers.add_parser('status', description='Show status of scanned packages')
+	status_parser.set_defaults(action='status')
 	
 
 	args = parser.parse_args(user_arguments)

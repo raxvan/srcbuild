@@ -68,14 +68,18 @@ class CmakeContext(generator_utils.GeneratorInterface):
 		self.cmake_workspace = generator_utils.read_text_file(os.path.join(template_folder,"cmake_workspace_template.txt"))
 		self.cmake_project_template = generator_utils.read_text_file(os.path.join(template_folder,"cmake_project_template.txt"))
 		fc = [
-			"cmake_build_with_config.sh",
-			"cmake_build_with_config.bat",
-			"cmake_generate_vs2022.bat",
-			"cmake_generate_xcode.sh",
-			"setup-vscode-workspace.py",
-			#"_on_successfull_build.py",
+			"cmake-build-with-config.sh",
+			"cmake-build-with-config.bat",
+			"cmake-generate-vs2022.bat",
+			"cmake-generate-xcode.sh",
+			"cmake-create-vscode-workspace.py",
 		]
 		self.files_to_copy = {x : os.path.join(template_folder, x) for x in fc }
+
+		srcbuild_files = [
+			"cmake_successfull_build.py"
+		]
+		self.srcbuild_files_to_copy = {x : os.path.join(template_folder, x) for x in srcbuild_files }
 
 	def __str__(self):
 		return "cmake"
@@ -115,6 +119,7 @@ class CmakeContext(generator_utils.GeneratorInterface):
 			"__ADD_TYPE_DATA__" : cmake_add_type_data[itype],
 			"__STANDARD__" : _get_cpp_standard(item),
 			"__THREADS__" : "YES",
+			"__PROJECT_TYPE__" : itype
 		}
 
 		_update_warnings(replacemap, item);
@@ -138,6 +143,12 @@ class CmakeContext(generator_utils.GeneratorInterface):
 		for k,v in self.files_to_copy.items():
 			output_path = os.path.join(solution.output, k)
 			shutil.copyfile(v,output_path)
+
+		for k,v in self.srcbuild_files_to_copy.items():
+			output_path = os.path.join(solution.output, ".srcbuild", k)
+			shutil.copyfile(v,output_path)
+
+		
 
 	def accept(self, solution, module):
 		if generator_cpp_utils.is_cpp_compilable(module):

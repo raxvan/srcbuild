@@ -19,13 +19,13 @@ else()
 	endif()
 endif()
 
-file(GLOB ON_SUCCESS_PYTHON_SCRIPT "${CMAKE_SOURCE_DIR}/_cmake_successfull_build.py")
+file(GLOB ON_SUCCESS_PYTHON_SCRIPT "${CMAKE_SOURCE_DIR}/.srcbuild/cmake_successfull_build.py")
 
 if(ON_SUCCESS_PYTHON_SCRIPT)
-	set(ENABLE_POST_BUILD_STEP ON)
-	message(STATUS "<<< ! >>> ENABLE_POST_BUILD_STEP: enabled")
+	set(ENABLE_SRCBUILD_POST_BUILD ON)
+	message(STATUS "<<< ! >>> ENABLE_SRCBUILD_POST_BUILD: enabled")
 else()
-	set(ENABLE_POST_BUILD_STEP OFF)
+	set(ENABLE_SRCBUILD_POST_BUILD OFF)
 endif()
 
 if(NOT DEFINED ENABLE_ADDRESS_SANITIZER)
