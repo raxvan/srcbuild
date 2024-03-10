@@ -133,7 +133,7 @@ class Solution(package_graph.ModuleGraph):
 		root_module = root_modules[0]
 
 		out = None
-		if outname != "":
+		if outname != None and outname != "":
 			out = srcbuild_default_paths.get_custom_build_folder(root_module.get_package_absolute_path(), outname)
 		else:
 			out = srcbuild_default_paths.get_build_folder(root_module.get_package_absolute_path())
