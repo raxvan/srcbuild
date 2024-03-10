@@ -33,7 +33,7 @@ def perform_binary_copy():
 
 	print(f"{_message_header}Binary (main): {os.path.relpath(binary_input, _solution_output)}")
 
-	if project_type == "exe":
+	if project_type == "exe" and active_compiler != "MSVC":
 		binary_output = os.path.join(_solution_output,"bin", active_configuration)
 
 		if not os.path.exists(binary_output):

@@ -26,6 +26,7 @@ def discover_buidlers():
 		"debug" : os.path.join(_generators_dir, "generator_debug.py"),
 		"stamps" : os.path.join(_generators_dir, "generator_stamps.py"),
 		"cmake" : os.path.join(_generators_dir, "generator_cmake.py"),
+		"premake" : os.path.join(_generators_dir, "generator_premake.py"),
 		
 	}
 
@@ -53,11 +54,11 @@ def import_builder_stack(root_workspace, builder_stack):
 	return [result[b] for b in builder_stack]
 
 
-def build(root_workspace, path, force, builder_stack):
+def build(root_workspace, path, output, force, builder_stack):
 	builders = import_builder_stack(root_workspace, builder_stack)
 
 	sol = solution.Solution(builders)
 
-	sol.construct_from_path(os.path.abspath(path), force)
+	sol.construct_from_path(os.path.abspath(path), output, force)
 
 	return sol.output

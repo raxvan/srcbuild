@@ -289,6 +289,9 @@ class ModuleGraph():
 	def get_module(self, modname):
 		return self.names.get(modname,None)
 
+	def get_config(self):
+		return self.configurator
+
 	#################################################################################################
 	#overloadable
 
@@ -318,6 +321,7 @@ class ModuleGraph():
 		#	raise Exception(f"Module `{abspath}` is missing configure function!")
 
 		return m
+
 
 
 	#################################################################################################

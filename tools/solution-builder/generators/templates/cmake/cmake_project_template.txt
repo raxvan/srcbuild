@@ -162,7 +162,7 @@ if(ENABLE_SRCBUILD_POST_BUILD)
 		COMMAND python3 ${CMAKE_SOURCE_DIR}/.srcbuild/cmake_successfull_build.py
 			__PROJECT_TYPE__
 			__NAME__
-			${ACTIVE_BUILD_CONFIGURATION} # Debug,Release
+			${CMAKE_BUILD_TYPE} # Debug,Release
 			${CMAKE_SYSTEM_PROCESSOR}
 			${CMAKE_CXX_COMPILER_ID}
 			$<TARGET_FILE:__NAME__>

@@ -22,6 +22,9 @@ def get_build_folder(abs_path_to_pack):
 	abs_pack_dir, filename = os.path.split(abs_path_to_pack)
 	return os.path.join(abs_pack_dir, "build", filename.replace(".pak.py",""))
 	
+def get_custom_build_folder(abs_path_to_pack, out):
+	abs_pack_dir,_ = os.path.split(abs_path_to_pack)
+	return os.path.join(abs_pack_dir, "build", out)
 
 def get_build_invremental_data(build_dir):
 	return os.path.join(build_dir, ".incremental")

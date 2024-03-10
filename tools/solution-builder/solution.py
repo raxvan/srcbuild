@@ -126,25 +126,29 @@ class Solution(package_graph.ModuleGraph):
 			self.printer.print_progress(f"> {str(b)}")
 			b.postbuild(self)
 
-	def construct_from_path(self, path, override_config):
+	def construct_from_path(self, path, outname, override_config):
 
 		root_modules = self.configure([path])
 
 		root_module = root_modules[0]
 
-		output = srcbuild_default_paths.get_build_folder(root_module.get_package_absolute_path())
+		out = None
+		if outname != "":
+			out = srcbuild_default_paths.get_custom_build_folder(root_module.get_package_absolute_path(), outname)
+		else:
+			out = srcbuild_default_paths.get_build_folder(root_module.get_package_absolute_path())
 
 		self.name = root_module.get_name()
-		self.output = output
+		self.output = out
 
-		self.modules_folder = srcbuild_default_paths.get_build_modules_data(output)
+		self.modules_folder = srcbuild_default_paths.get_build_modules_data(out)
 
-		if not os.path.exists(output):
-			os.makedirs(output)
+		if not os.path.exists(out):
+			os.makedirs(out)
 		if not os.path.exists(self.modules_folder):
 			os.makedirs(self.modules_folder)
 
-		self.sync_config(srcbuild_default_paths.get_build_config_init(output), override_config)
+		self.sync_config(srcbuild_default_paths.get_build_config_init(out), override_config)
 
 		#running prebuild:
 		self._prebuild()

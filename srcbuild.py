@@ -58,11 +58,18 @@ def main_build(args):
 
 	path = args.path
 	force = args.force
+	output = args.output
 
 	builder_list = args.builders
 	
 	import solution_builder
-	out = solution_builder.build(srcbuild_default_paths.default_workspace, path, force, builder_list)
+	out = solution_builder.build(
+		srcbuild_default_paths.default_workspace,
+		path,
+		output,
+		force,
+		builder_list
+	)
 
 	rebuild = os.path.join(out, "_rebuild.sh")
 	with open(rebuild, "w") as f:
@@ -123,6 +130,7 @@ if __name__ == '__main__':
 	build_parser = subparsers.add_parser('build', description='Runs a builder bundle on module')
 	build_parser.set_defaults(action='build')
 	build_parser.add_argument('-f', '--force', dest='force', action='store_true', help="Regenerate config.ini from build folder.")
+	build_parser.add_argument('-o', '--out', dest='output', type=str, help="changes output of the build")
 	build_parser.add_argument('path', help='Path to root module')
 	build_parser.add_argument('builders', nargs='+', help='List of builders separated by spaces, in order!')
 
