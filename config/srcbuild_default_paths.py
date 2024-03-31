@@ -3,7 +3,7 @@ import os
 
 #workspace:
 default_workspace = "/wspace/workspace"
-default_modules_folder = ".modules"
+default_modules_folder = ".wspace/modules"
 default_index_filename = "index.local.json"
 
 def get_pack_info(abs_path_to_pack):
