@@ -125,10 +125,6 @@ if __name__ == '__main__':
 	scan_parser = subparsers.add_parser('scan', description='Scan for modules.')
 	scan_parser.set_defaults(action='scan')
 	
-	status_parser = subparsers.add_parser('status', description='Show status of scanned packages')
-	status_parser.set_defaults(action='status')
-	
-
 	args = parser.parse_args(user_arguments)
 	if hasattr(args, 'action'):
 		main(args)
