@@ -87,16 +87,6 @@ def main_scan(args):
 		srcbuild_default_paths.default_workspace,
 	)
 
-def main_status(args):
-	_this_dir = os.path.dirname(os.path.abspath(__file__))
-	sys.path.append(os.path.join(_this_dir,"tools","stamps"))
-
-	import package_stamps
-
-	package_stamps.show_all(
-		srcbuild_default_paths.default_workspace,
-	)
-
 def main(args):
 	acc = args.action
 
@@ -106,8 +96,6 @@ def main(args):
 		main_scan(args)
 	elif acc == "info":
 		main_info(args)
-	elif acc == "status":
-		main_status(args)
 	
 
 if __name__ == '__main__':
@@ -145,6 +133,12 @@ if __name__ == '__main__':
 	if hasattr(args, 'action'):
 		main(args)
 	else:
-		print("Missing operation:")
+		print("Operations:")
 		for k,_ in subparsers.choices.items():
+			print("\t-> " + k)
+
+		print("Builders:")
+		sys.path.append(os.path.join(_this_dir,"tools","solution-builder"))
+		import solution_builder
+		for k,_ in solution_builder.discover_buidlers().items():
 			print("\t-> " + k)

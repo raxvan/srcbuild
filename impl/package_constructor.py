@@ -208,12 +208,12 @@ class PackageConstructor():
 			props[p] = v.serialize()
 
 		for f in self._files:
-			e = self._paths[f]
-			files[f] = v.packed_tags()
+			p = self._paths[f]
+			files[f] = p.packed_tags()
 
 		for f in self._folders:
-			e = self._paths[f]
-			folders[f] = v.packed_tags()
+			p = self._paths[f]
+			folders[f] = p.packed_tags()
 
 		return {
 			"files" : files,

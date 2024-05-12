@@ -54,7 +54,7 @@ class PackageEntry():
 		if lt > 1:
 			return list(self.tags)
 		elif lt == 1:
-			return self.tags[0]
+			return next(iter(self.tags))
 		return []
 
 	def join_tags(self, utag):
