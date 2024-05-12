@@ -226,7 +226,7 @@ class Configurator():
 					r = r + f"\t#{index}:{acc}\n"
 					index = index + 1
 
-		r = r + "#end.\n"
+		r = r + "[END]\n"
 
 		return r
 

@@ -25,19 +25,19 @@ def main_info(args):
 
 	mg.printer.print_status("DONE.")
 
-	print("\n>MODULES:")
+	mg.printer.print_header("MODULES:")
 
 	mg.print_info(args.pkey, args.psha, args.ppath)
 	if args.link_tree == True:
-		print("LINKS:")
+		mg.printer.print_header("LINKS")
 		mg.print_links()
 	elif args.links == True:
-		print("LINKS:")
+		mg.printer.print_header("LINKS")
 		mg.print_links_shallow()
 
 
 	if mg.configurator != None:
-		print(">CONFIG:")
+		mg.printer.print_header("CONFIG")
 		print(mg.configurator._get_config_ini(mg))
 
 def generate_rebuild_file(path, builders_list):
