@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAssembly with Emscripten</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            white-space: pre-wrap; /* Ensures that whitespace is preserved and lines break as needed */
+        }
+        .error {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div id="output"><pre><strong></strong></pre></div>
+
+    <script>
+        // The Module object will be defined in your_module.js
+        var Module = {
+            print: function(text) {
+                var outputDiv = document.getElementById('output').firstElementChild;
+                var textNode = document.createTextNode(text + "\n");
+                outputDiv.appendChild(textNode);
+            },
+            printErr: function(text) {
+                var outputDiv = document.getElementById('output').firstElementChild;
+                var span = document.createElement('span');
+                span.className = 'error';
+                span.textContent = text + "\n";
+                outputDiv.appendChild(span);
+            },
+            onRuntimeInitialized: function() {
+                // Call a function from the wasm module here if needed
+                // For example: Module._main();
+            }
+        };
+    
+    </script>
+    <script async type="text/javascript" src="runtime-loader.js"></script>
+</body>
+</html>

@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e -o pipefail
 
 # Can build on linux/unix/etc with "default" builder using a config
 
-#https://stackoverflow.com/questions/24460486/cmake-build-type-is-not-being-used-in-cmakelists-txt
+# https://stackoverflow.com/questions/24460486/cmake-build-type-is-not-being-used-in-cmakelists-txt
 
 #export CC=/usr/bin/clang
 #export CXX=/usr/bin/clang++
@@ -32,7 +33,6 @@ do
         break
     fi
 done
-
 
 mkdir -p $BUILD_FOLDER
 cd $BUILD_FOLDER

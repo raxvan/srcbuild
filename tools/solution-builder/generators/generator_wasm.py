@@ -43,7 +43,6 @@ def _update_warnings(replacemap, item):
 		replacemap["__FULL_WARNINGS__"] = "YES"
 		replacemap["__DISABLE_WARNINGS__"] = "NO"
 
-
 cmake_add_type = {
 	"exe" : "add_executable",
 	"lib" : "add_library",
@@ -61,23 +60,28 @@ cmake_add_type_data = {
 
 ##################################################################################################################################
 
-class CmakeContext(generator_utils.GeneratorInterface):
+class WasmContext(generator_utils.GeneratorInterface):
 	def __init__(self, workspace):
-		self.template_folder = os.path.join(_this_dir, "templates", "cmake")
+		self.template_folder = os.path.join(_this_dir, "templates", "wasm")
 
 		self.workspace = workspace
-		self.cmake_workspace = generator_utils.read_text_file(os.path.join(self.template_folder,"cmake_workspace_template.txt"))
-		self.cmake_project_template = generator_utils.read_text_file(os.path.join(self.template_folder,"cmake_project_template.txt"))
+		self.wasm_workspace = generator_utils.read_text_file(os.path.join(self.template_folder,"wasm_workspace_template.txt"))
+		self.wasm_project_template = generator_utils.read_text_file(os.path.join(self.template_folder,"wasm_project_template.txt"))
 
 		self.files_to_copy = []
 
-		self._add_template("cmake-build-with-config.sh", ".", ".", False)
-		self._add_template("cmake-build-with-config.bat", ".", ".", False)
-		self._add_template("cmake-generate-vs2022.bat", ".", ".", False)
-		self._add_template("cmake-generate-xcode.sh", ".", ".", False)
-		self._add_template("cmake-create-vscode-workspace.py", ".", ".", False)
+		self._add_template("wasm-emscripten.dockerfile", ".", "emscripten", False)
+		self._add_template("wasm-emscripten-build.sh", ".", "emscripten", True)
+		
+		
+		self._add_template("wasm-webserver.dockerfile", ".", "webhost", False)
+		self._add_template("requirements.txt", ".", "webhost", False)
+		self._add_template("wasm-webhost.py", ".", "webhost", False)
+		self._add_template("wasm-index.html", ".", "webhost", True)
 
-		self._add_template("cmake_successfull_build.py", ".", ".srcbuild", False)
+		
+		self._add_template("wasm-host-config.bat", ".", ".", True)
+		self._add_template("wasm-build-with-config.bat", ".", ".", True)
 
 	def __str__(self):
 		return "cmake"
@@ -90,8 +94,8 @@ class CmakeContext(generator_utils.GeneratorInterface):
 		content = f.read()
 		f.close()
 		replmap = {
-			"__WORKSPACE__" : os.path.join(os.path.relpath(self.workspace, solution.output), ".."),
-			"__RELATIVE_OUTPUT__" : os.path.relpath(solution.output, self.workspace)
+			"__WORKSPACE_RELPATH__" : os.path.join(os.path.relpath(self.workspace, solution.output)),
+			"__WORKSPACE_PATH__" : os.path.relpath(solution.output, self.workspace),
 		}
 		for word, value in replmap.items():
 			content = content.replace(word, value)
@@ -101,10 +105,10 @@ class CmakeContext(generator_utils.GeneratorInterface):
 
 	def _generate_header(self, solution_name):
 		sname = "_" + solution_name.replace("-","_")
-		return self.cmake_workspace.replace("__SOLUTION_NAME__",sname) + "\n"
+		return self.wasm_workspace.replace("__SOLUTION_NAME__",sname) + "\n"
 
 	def _generate_project_str(self, replmap):
-		proj_data = self.cmake_project_template
+		proj_data = self.wasm_project_template
 		for word, value in replmap.items():
 			proj_data = proj_data.replace(word, value)
 		return proj_data + "\n"
@@ -134,7 +138,8 @@ class CmakeContext(generator_utils.GeneratorInterface):
 			"__ADD_TYPE_DATA__" : cmake_add_type_data[itype],
 			"__STANDARD__" : _get_cpp_standard(item),
 			"__THREADS__" : "YES",
-			"__PROJECT_TYPE__" : itype
+			"__PROJECT_TYPE__" : itype,
+			"__ISEXECUTABLE__" : "YES" if itype == "exe" else "NO",
 		}
 
 		_update_warnings(replacemap, item);
@@ -205,7 +210,7 @@ class CmakeContext(generator_utils.GeneratorInterface):
 
 
 def create(workspace, priority):
-	return CmakeContext(workspace)
+	return WasmContext(workspace)
 
 
 

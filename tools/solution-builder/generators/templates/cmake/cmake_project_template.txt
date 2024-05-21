@@ -22,8 +22,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		"$<$<CONFIG:Release>:-Ofast>"
 		"-fms-extensions"
 		"-pedantic"
-		"-Wno-gnu-zero-variadic-macro-arguments" # https://stackoverflow.com/questions/21266380/is-the-gnu-zero-variadic-macro-arguments-safe-to-ignore
+		"-Wno-gnu-zero-variadic-macro-arguments"
 	)
+	# https://stackoverflow.com/questions/21266380/is-the-gnu-zero-variadic-macro-arguments-safe-to-ignore
 	list(APPEND CUSTOM_LINK_OPTIONS
 		"$<$<CONFIG:Debug>:-gfull>"
 		"$<$<CONFIG:Release>:-Ofast>"
@@ -98,7 +99,9 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	endif()
 
 endif()
-#elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+
+
+
 
 ##############################################################################################
 #CUSTOM_LINK_OPTIONS

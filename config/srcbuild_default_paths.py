@@ -29,12 +29,8 @@ def get_custom_build_folder(abs_path_to_pack, out):
 def get_build_invremental_data(build_dir):
 	return os.path.join(build_dir, ".incremental")
 
-def get_build_tools_dir(build_dir):
-	return os.path.join(build_dir, ".srcbuild")
-
 def get_build_modules_data(build_dir):
 	return os.path.join(build_dir, ".srcbuild", "modules")
-
 
 #individual files:
 def get_build_config_init(build_dir):

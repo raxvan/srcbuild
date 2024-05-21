@@ -1,0 +1,21 @@
+
+cmake_minimum_required(VERSION 3.11)
+
+# set the project name
+project(__SOLUTION_NAME__)
+
+################################################################################################################
+
+message(STATUS "<<< ! >>> CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "<<< ! >>> Config types: ${CMAKE_CONFIGURATION_TYPES}")
+message(STATUS "<<< ! >>> Build config: [${CMAKE_BUILD_TYPE}]")
+
+################################################################################################################
+
+if(NOT DEFINED ACTIVE_BUILD_CONFIGURATION)
+	message( FATAL_ERROR "Missing configuration for build, choose [Debug,Release]!" )
+else()
+	message( STATUS "<<< ! >>> Binary output set to `www/${ACTIVE_BUILD_CONFIGURATION}` ")
+endif()
+
+################################################################################################################

@@ -4,20 +4,26 @@ cmake_minimum_required(VERSION 3.11)
 # set the project name
 project(__SOLUTION_NAME__)
 
+################################################################################################################
+
 message(STATUS "<<< ! >>> CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "<<< ! >>> Config types: ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "<<< ! >>> Build config: [${CMAKE_BUILD_TYPE}]")
 
+################################################################################################################
+
 get_property(MCONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(MCONFIG)
-    message(STATUS "<<< ! >>> Milti Config Debug/Release")
+	message(STATUS "<<< ! >>> Milti Config Debug/Release")
 else()
-    if(NOT DEFINED ACTIVE_BUILD_CONFIGURATION)
-	    message( FATAL_ERROR "Missing configuration for build, choose [Debug,Release]!" )
+	if(NOT DEFINED ACTIVE_BUILD_CONFIGURATION)
+		message( FATAL_ERROR "Missing configuration for build, choose [Debug,Release]!" )
 	else()
 		message( STATUS "<<< ! >>> Binary output set to `bin/${ACTIVE_BUILD_CONFIGURATION}` ")
 	endif()
 endif()
+
+################################################################################################################
 
 file(GLOB ON_SUCCESS_PYTHON_SCRIPT "${CMAKE_SOURCE_DIR}/.srcbuild/cmake_successfull_build.py")
 
@@ -26,10 +32,13 @@ if(ON_SUCCESS_PYTHON_SCRIPT)
 	message(STATUS "<<< ! >>> ENABLE_SRCBUILD_POST_BUILD: enabled")
 else()
 	set(ENABLE_SRCBUILD_POST_BUILD OFF)
+	message(STATUS "<<< ! >>> ENABLE_SRCBUILD_POST_BUILD: disabled")
 endif()
 
+################################################################################################################
+
 if(NOT DEFINED ENABLE_ADDRESS_SANITIZER)
-    set(ENABLE_ADDRESS_SANITIZER OFF)
+	set(ENABLE_ADDRESS_SANITIZER OFF)
 endif()
 
 if(ENABLE_ADDRESS_SANITIZER)
@@ -38,3 +47,4 @@ else()
 	message(STATUS "<<< ! >>> ENABLE_ADDRESS_SANITIZER: disabled")
 endif()
 
+################################################################################################################
